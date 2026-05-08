@@ -106,6 +106,33 @@ const cultureCalls = [
   },
 ]
 
+const creatorSpaces = [
+  {
+    id: 1,
+    name: '○○도서관 문화강의실',
+    type: '공공공간',
+    capacity: '30명',
+    availableTime: '주말 낮',
+    goodFor: '전시 / 체험 / 강연',
+  },
+  {
+    id: 2,
+    name: '○○청년센터 라운지',
+    type: '청년공간',
+    capacity: '50명',
+    availableTime: '평일 저녁',
+    goodFor: '공연 / 영화 / 네트워킹',
+  },
+  {
+    id: 3,
+    name: '○○주민센터 다목적실',
+    type: '생활문화공간',
+    capacity: '40명',
+    availableTime: '평일 낮',
+    goodFor: '연극 / 체험 / 고령층 프로그램',
+  },
+]
+
 const matchedPrograms = [
   {
     id: 1,
@@ -170,6 +197,7 @@ function App() {
   const [page, setPage] = useState('home')
   const [selectedCall, setSelectedCall] = useState(cultureCalls[0])
   const [isHelpOpen, setIsHelpOpen] = useState(false)
+  const [isFeatureOpen, setIsFeatureOpen] = useState(false)
   const [filter, setFilter] = useState('latest')
   const [requestForm, setRequestForm] = useState({
     genre: '',
@@ -200,13 +228,15 @@ function App() {
     <div className="app">
       <header className="top-nav">
         <button className="logo-button" onClick={() => setPage('home')}>
-          콜쳐
+          <span>Call</span>
+          <span>ture</span>
         </button>
 
         <nav>
           <button onClick={() => setPage('home')}>메인</button>
           <button onClick={() => setPage('request')}>요청하기</button>
           <button onClick={() => setPage('list')}>문화콜 목록</button>
+          <button onClick={() => setPage('creator')}>창작자 모드</button>
           <button onClick={() => setPage('matching')}>매칭</button>
           <button onClick={() => setPage('my')}>나의 프로그램</button>
         </nav>
@@ -216,7 +246,9 @@ function App() {
         <HomePage
           onRequestClick={() => setPage('request')}
           onListClick={() => setPage('list')}
+          onCreatorClick={() => setPage('creator')}
           onHelpClick={() => setIsHelpOpen(true)}
+          onFeatureClick={() => setIsFeatureOpen(true)}
         />
       )}
 
@@ -239,6 +271,10 @@ function App() {
         />
       )}
 
+      {page === 'creator' && (
+        <CreatorModePage calls={cultureCalls} spaces={creatorSpaces} />
+      )}
+
       {page === 'matching' && (
         <MatchingPage
           programs={matchedPrograms}
@@ -249,57 +285,46 @@ function App() {
       {page === 'my' && <MyProgramPage programs={myPrograms} />}
 
       {isHelpOpen && <HelpModal onClose={() => setIsHelpOpen(false)} />}
+      {isFeatureOpen && <FeatureModal onClose={() => setIsFeatureOpen(false)} />}
     </div>
   )
 }
 
-function HomePage({ onRequestClick, onListClick, onHelpClick }) {
+function HomePage({
+  onRequestClick,
+  onListClick,
+  onCreatorClick,
+  onHelpClick,
+  onFeatureClick,
+}) {
   return (
-    <main className="page">
-      <section className="hero">
-        <div className="hero-content">
-          <p className="eyebrow">문화 요청 매칭 플랫폼</p>
-          <h1>콜쳐</h1>
-          <p className="hero-description">
-            우리 동네에 필요한 문화를 직접 요청하고, 요청이 모이면 실제 프로그램으로 연결해요.
-          </p>
-
-          <div className="hero-actions">
-            <button className="primary-button" onClick={onRequestClick}>
-              문화 요청하기
-            </button>
-            <button className="secondary-button" onClick={onListClick}>
-              문화콜 목록 보기
-            </button>
-            <button className="help-button" onClick={onHelpClick}>
-              진행 방식 보기
-            </button>
-          </div>
+    <main className="page home-page">
+      <section className="simple-hero">
+        <div className="brand-mark">
+          <span>Call</span>
+          <span>ture</span>
         </div>
 
-        <div className="main-preview-card">
-          <span className="status-badge">성사 직전</span>
-          <h2>한옥 마을 전통문화 체험</h2>
-          <p>28명 요청 / 목표 30명</p>
-          <div className="progress-bar">
-            <div className="progress-fill" style={{ width: '93%' }}></div>
-          </div>
-          <p className="remain-text">2명만 더 모이면 매칭이 시작돼요</p>
-        </div>
-      </section>
+        <p className="hero-description">
+          필요한 문화를 요청하면, 비슷한 요청을 모아 실제 프로그램으로 연결합니다.
+        </p>
 
-      <section className="feature-grid">
-        <div className="feature-card">
-          <h3>요청 기반</h3>
-          <p>주민이 원하는 문화 수요에서 프로그램이 시작됩니다.</p>
-        </div>
-        <div className="feature-card">
-          <h3>창작자 연결</h3>
-          <p>지역 창작자가 실제 수요가 있는 곳에서 활동합니다.</p>
-        </div>
-        <div className="feature-card">
-          <h3>공간 매칭</h3>
-          <p>도서관, 주민센터, 청년센터가 문화 공간이 됩니다.</p>
+        <div className="hero-actions">
+          <button className="primary-button" onClick={onRequestClick}>
+            문화 요청하기
+          </button>
+          <button className="secondary-button" onClick={onListClick}>
+            문화콜 목록 보기
+          </button>
+          <button className="creator-button" onClick={onCreatorClick}>
+            창작자 모드
+          </button>
+          <button className="help-button" onClick={onHelpClick}>
+            진행 방식 보기
+          </button>
+          <button className="ghost-button" onClick={onFeatureClick}>
+            서비스 특징 보기
+          </button>
         </div>
       </section>
     </main>
@@ -313,7 +338,7 @@ function HelpModal({ onClose }) {
         <button className="modal-close-button" onClick={onClose}>
           ×
         </button>
-        <p className="eyebrow">콜쳐 이용 방법</p>
+        <p className="eyebrow">Call ture 이용 방법</p>
         <h2>문화콜 진행 방식</h2>
 
         <ol className="help-list">
@@ -334,6 +359,35 @@ function HelpModal({ onClose }) {
             <span>지역 창작자와 공공공간이 연결되어 작은 문화 프로그램이 열립니다.</span>
           </li>
         </ol>
+      </section>
+    </div>
+  )
+}
+
+function FeatureModal({ onClose }) {
+  return (
+    <div className="modal-backdrop">
+      <section className="feature-modal">
+        <button className="modal-close-button" onClick={onClose}>
+          ×
+        </button>
+        <p className="eyebrow">서비스 특징</p>
+        <h2>요청이 모이면 문화가 됩니다</h2>
+
+        <div className="popup-feature-grid">
+          <div className="popup-feature-card">
+            <h3>요청 기반</h3>
+            <p>주민이 직접 원하는 문화 수요를 남깁니다.</p>
+          </div>
+          <div className="popup-feature-card">
+            <h3>창작자 연결</h3>
+            <p>지역 창작자가 수요가 있는 요청에 응답합니다.</p>
+          </div>
+          <div className="popup-feature-card">
+            <h3>공간 배정</h3>
+            <p>도서관, 주민센터, 청년센터 등 공공공간과 연결합니다.</p>
+          </div>
+        </div>
       </section>
     </div>
   )
@@ -412,7 +466,7 @@ function RequestPage({ requestForm, onChange, onSubmit }) {
           <textarea
             value={requestForm.message}
             onChange={(e) => onChange('message', e.target.value)}
-            placeholder="예: 우리 동네에서 평일 낮에 볼 수 있는 작은 전시가 있으면 좋겠어요."
+            placeholder="예: 평일 낮에 볼 수 있는 작은 전시가 있으면 좋겠어요."
           />
         </FormGroup>
 
@@ -518,12 +572,97 @@ function CultureCallListPage({
   )
 }
 
+function CreatorModePage({ calls, spaces }) {
+  const readyCalls = calls.filter((call) => call.current / call.goal >= 0.7)
+  const [selectedCall, setSelectedCall] = useState(readyCalls[0])
+  const [selectedSpace, setSelectedSpace] = useState(spaces[0])
+
+  return (
+    <main className="page">
+      <section className="section-header">
+        <p className="eyebrow">창작자 모드</p>
+        <h1>요청을 실제 공간에 매칭하기</h1>
+      </section>
+
+      <div className="creator-layout">
+        <section className="creator-panel">
+          <h2>신청 접수된 요청</h2>
+          <div className="mini-list">
+            {readyCalls.map((call) => (
+              <button
+                key={call.id}
+                className={selectedCall.id === call.id ? 'mini-card active' : 'mini-card'}
+                onClick={() => setSelectedCall(call)}
+              >
+                <strong>{call.title}</strong>
+                <span>{call.current}/{call.goal}명 · {call.time}</span>
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <section className="map-panel">
+          <div className="map-placeholder">
+            <p>지도 API 영역</p>
+            <span>Kakao Map / Naver Map / Google Map 연동 자리</span>
+          </div>
+        </section>
+
+        <section className="creator-panel">
+          <h2>공간 후보</h2>
+          <div className="mini-list">
+            {spaces.map((space) => (
+              <button
+                key={space.id}
+                className={selectedSpace.id === space.id ? 'mini-card active' : 'mini-card'}
+                onClick={() => setSelectedSpace(space)}
+              >
+                <strong>{space.name}</strong>
+                <span>{space.capacity} · {space.availableTime}</span>
+              </button>
+            ))}
+          </div>
+        </section>
+      </div>
+
+      <section className="match-preview-card">
+        <span className="status-badge">매칭 미리보기</span>
+        <h2>{selectedCall.title}</h2>
+
+        <div className="preview-grid">
+          <div>
+            <h3>요청 정보</h3>
+            <p>장르: {selectedCall.genre}</p>
+            <p>대상: {selectedCall.target}</p>
+            <p>시간: {selectedCall.time}</p>
+            <p>요청 인원: {selectedCall.current}/{selectedCall.goal}명</p>
+          </div>
+
+          <div>
+            <h3>배정 공간</h3>
+            <p>공간명: {selectedSpace.name}</p>
+            <p>유형: {selectedSpace.type}</p>
+            <p>수용 인원: {selectedSpace.capacity}</p>
+            <p>추천 용도: {selectedSpace.goodFor}</p>
+          </div>
+        </div>
+
+        <button
+          className="primary-button full-button"
+          onClick={() => alert('공간 매칭이 임시 저장되었습니다!')}
+        >
+          이 공간으로 매칭하기
+        </button>
+      </section>
+    </main>
+  )
+}
+
 function MatchingPage({ programs, onMyProgramClick }) {
   return (
     <main className="page">
       <section className="section-header">
         <p className="eyebrow">창작자 · 공간 매칭</p>
-        <h1>목표를 넘은 요청</h1>
       </section>
 
       <section className="matching-grid">
@@ -559,7 +698,6 @@ function MyProgramPage({ programs }) {
     <main className="page">
       <section className="section-header">
         <p className="eyebrow">나의 프로그램</p>
-        <h1>신청자가 충족된 프로그램</h1>
       </section>
 
       <section className="program-list">
