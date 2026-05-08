@@ -593,7 +593,7 @@ function App() {
 
       {page === 'list' && (
         <CalltureListPage
-          calls={serverCalls.length > 0 ? serverCalls : cultureCalls}
+          calls={serverCalls}
           selectedCall={selectedCall}
           onSelect={moveToDetail}
           onRequestClick={() => setPage('request')}
@@ -601,6 +601,7 @@ function App() {
           onFilterChange={setFilter}
           onBack={goHome}
           isLoading={isLoadingCalls}
+          onRefresh={fetchClusters}
         />
       )}
 
@@ -1008,8 +1009,37 @@ function CalltureListPage({
   filter,
   onFilterChange,
   onBack,
+  isLoading,
 }) {
   const [isDetailOpen, setIsDetailOpen] = useState(false)
+
+  if (isLoading) {
+  return (
+    <PageLayout onBack={onBack}>
+      <section className="section-header">
+        <p className="eyebrow">문화콜 목록</p>
+        <h1>문화 요청을 불러오는 중입니다.</h1>
+      </section>
+    </PageLayout>
+  )
+}
+
+if (calls.length === 0) {
+  return (
+    <PageLayout onBack={onBack}>
+      <section className="section-header">
+        <p className="eyebrow">문화콜 목록</p>
+        <h1>아직 등록된 문화콜이 없습니다.</h1>
+        <p>
+          첫 요청을 작성하면 비슷한 문화 수요가 모여 문화콜로 생성됩니다.
+        </p>
+        <button className="primary-button" onClick={onRequestClick}>
+          첫 문화 요청 작성하기
+        </button>
+      </section>
+    </PageLayout>
+  )
+}
 
   const filteredCalls = useMemo(() => {
     const copied = [...calls]
