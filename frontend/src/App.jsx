@@ -366,6 +366,38 @@ const myPrograms = [
   },
 ]
 
+const MAP_CENTER = {
+  lat: 37.5666103,
+  lng: 126.9783882,
+}
+
+const mapPlaces = [
+  {
+    id: 1,
+    name: '○○도서관 문화강의실',
+    type: '공공공간',
+    lat: 37.5666103,
+    lng: 126.9783882,
+    description: '전시 / 체험 / 강연에 적합한 생활권 문화공간',
+  },
+  {
+    id: 2,
+    name: '○○청년센터 라운지',
+    type: '청년공간',
+    lat: 37.570377,
+    lng: 126.9816417,
+    description: '평일 저녁 공연 / 영화 / 네트워킹 가능',
+  },
+  {
+    id: 3,
+    name: '○○주민센터 다목적실',
+    type: '생활문화공간',
+    lat: 37.5637584,
+    lng: 126.9975517,
+    description: '연극 / 체험 / 고령층 프로그램에 적합',
+  },
+]
+
 function App() {
   const [page, setPage] = useState('home')
   const [selectedCall, setSelectedCall] = useState(cultureCalls[0])
@@ -1144,6 +1176,140 @@ if (calls.length === 0) {
   )
 }
 
+function NaverMap({ places = [] }) {
+  const mapElementId = 'naver-map'
+  const [status, setStatus] = useState('loading')
+
+  useEffect(() => {
+    const clientId = import.meta.env.VITE_NAVER_MAP_CLIENT_ID
+
+    if (!clientId) {
+      console.error('VITE_NAVER_MAP_CLIENT_ID가 설정되지 않았습니다.')
+      setStatus('missing-key')
+      return
+    }
+
+    const initializeMap = () => {
+      if (!window.naver || !window.naver.maps) {
+        console.error('Naver Maps 객체를 찾을 수 없습니다.')
+        setStatus('load-error')
+        return
+      }
+
+      const mapContainer = document.getElementById(mapElementId)
+
+      if (!mapContainer) {
+        console.error('지도 컨테이너를 찾을 수 없습니다.')
+        setStatus('container-error')
+        return
+      }
+
+      const map = new window.naver.maps.Map(mapContainer, {
+        center: new window.naver.maps.LatLng(MAP_CENTER.lat, MAP_CENTER.lng),
+        zoom: 13,
+        minZoom: 7,
+        zoomControl: true,
+        zoomControlOptions: {
+          position: window.naver.maps.Position.TOP_RIGHT,
+        },
+      })
+
+      places.forEach((place) => {
+        const marker = new window.naver.maps.Marker({
+          position: new window.naver.maps.LatLng(place.lat, place.lng),
+          map,
+          title: place.name,
+        })
+
+        const infoWindow = new window.naver.maps.InfoWindow({
+          content: `
+            <div style="padding:12px; min-width:190px;">
+              <strong style="display:block; margin-bottom:6px;">
+                ${place.name}
+              </strong>
+              <span style="display:block; color:#ff6b6b; font-weight:700; margin-bottom:6px;">
+                ${place.type}
+              </span>
+              <p style="margin:0; color:#555; font-size:13px; line-height:1.5;">
+                ${place.description}
+              </p>
+            </div>
+          `,
+        })
+
+        window.naver.maps.Event.addListener(marker, 'click', () => {
+          if (infoWindow.getMap()) {
+            infoWindow.close()
+          } else {
+            infoWindow.open(map, marker)
+          }
+        })
+      })
+
+      setStatus('ready')
+    }
+
+    if (window.naver && window.naver.maps) {
+      initializeMap()
+      return
+    }
+
+    const existingScript = document.querySelector('script[data-naver-map-script="true"]')
+
+    if (existingScript) {
+      existingScript.addEventListener('load', initializeMap)
+      existingScript.addEventListener('error', () => setStatus('load-error'))
+
+      return () => {
+        existingScript.removeEventListener('load', initializeMap)
+      }
+    }
+
+    const script = document.createElement('script')
+    script.setAttribute('data-naver-map-script', 'true')
+    script.src = `https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=${clientId}`
+    script.async = true
+
+    script.onload = initializeMap
+    script.onerror = () => {
+      console.error('네이버 지도 스크립트 로드 실패')
+      setStatus('load-error')
+    }
+
+    document.head.appendChild(script)
+  }, [places])
+
+  return (
+    <div className="naver-map-wrapper">
+      <div id={mapElementId} className="naver-map" />
+
+      {status === 'loading' && (
+        <div className="map-status-message">
+          지도를 불러오는 중입니다.
+        </div>
+      )}
+
+      {status === 'missing-key' && (
+        <div className="map-status-message error-message">
+          VITE_NAVER_MAP_CLIENT_ID가 설정되지 않았습니다.
+        </div>
+      )}
+
+      {status === 'load-error' && (
+        <div className="map-status-message error-message">
+          네이버 지도 API를 불러오지 못했습니다. Client ID와 Web 서비스 URL을 확인해주세요.
+        </div>
+      )}
+
+      {status === 'container-error' && (
+        <div className="map-status-message error-message">
+          지도 컨테이너를 찾지 못했습니다.
+        </div>
+      )}
+    </div>
+  )
+}
+
 function CreatorModePage({ calls, spaces, onBack }) {
   const readyCalls = calls.filter((call) => call.current / call.goal >= 0.7)
   const [selectedCall, setSelectedCall] = useState(readyCalls[0])
@@ -1178,13 +1344,9 @@ function CreatorModePage({ calls, spaces, onBack }) {
           </div>
         </section>
 
-        <section className="map-panel">
-          <div className="map-placeholder">
-            <p>🗺️</p>
-            <strong>지도 API</strong>
-            <span>Kakao / Naver / Google</span>
-          </div>
-        </section>
+        <div className="map-panel">
+          <NaverMap places={mapPlaces} />
+        </div>
 
         <section className="creator-panel">
           <h2>공간</h2>
