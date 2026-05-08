@@ -316,3 +316,119 @@ class CultureRequest(models.Model):
             self.region_label = f"{self.sido} {self.sigungu}".strip()
 
         super().save(*args, **kwargs)
+
+
+class Creator(models.Model):
+    """
+    지역 창작자, 소규모 예술가, 전통문화 활동가 정보를 저장합니다.
+    """
+
+    name = models.CharField(max_length=100, verbose_name="창작자 이름")
+    region_label = models.CharField(max_length=100, verbose_name="활동 지역")
+    category = models.CharField(max_length=50, verbose_name="활동 분야")
+    description = models.TextField(blank=True, default="", verbose_name="소개")
+    is_local_creator = models.BooleanField(default=True, verbose_name="지역 창작자 여부")
+    is_traditional = models.BooleanField(default=False, verbose_name="전통문화 관련 여부")
+    contact = models.CharField(max_length=100, blank=True, default="", verbose_name="연락처")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="생성일")
+
+    class Meta:
+        verbose_name = "창작자"
+        verbose_name_plural = "창작자 목록"
+        ordering = ["region_label", "category", "name"]
+
+    def __str__(self):
+        return self.name
+
+
+class PublicSpace(models.Model):
+    """
+    주민센터, 도서관, 청년센터 등 문화 프로그램이 열릴 수 있는 공공공간입니다.
+    """
+
+    name = models.CharField(max_length=100, verbose_name="공간명")
+    region_label = models.CharField(max_length=100, verbose_name="위치")
+    address = models.CharField(max_length=255, blank=True, default="", verbose_name="주소")
+    capacity = models.PositiveIntegerField(default=30, verbose_name="수용 인원")
+    available_time = models.CharField(max_length=100, blank=True, default="", verbose_name="사용 가능 시간")
+    good_for = models.CharField(max_length=150, blank=True, default="", verbose_name="적합한 프로그램")
+    description = models.TextField(blank=True, default="", verbose_name="공간 설명")
+    latitude = models.FloatField(null=True, blank=True, verbose_name="위도")
+    longitude = models.FloatField(null=True, blank=True, verbose_name="경도")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="생성일")
+
+    class Meta:
+        verbose_name = "공공공간"
+        verbose_name_plural = "공공공간 목록"
+        ordering = ["region_label", "name"]
+
+    def __str__(self):
+        return self.name
+
+
+class ProgramProposal(models.Model):
+    """
+    요청 군집이 일정 기준에 도달했을 때 생성되는 프로그램 후보입니다.
+    """
+
+    STATUS_CHOICES = [
+        ("DRAFT", "제안 준비 중"),
+        ("RECRUITING", "참여자 모집 중"),
+        ("CONFIRMED", "진행 확정"),
+        ("CLOSED", "종료"),
+    ]
+
+    cluster = models.ForeignKey(
+        RequestCluster,
+        on_delete=models.CASCADE,
+        related_name="programs",
+        verbose_name="연결된 문화콜",
+    )
+    creator = models.ForeignKey(
+        Creator,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="programs",
+        verbose_name="창작자",
+    )
+    space = models.ForeignKey(
+        PublicSpace,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="programs",
+        verbose_name="공간",
+    )
+
+    title = models.CharField(max_length=150, verbose_name="프로그램 제목")
+    description = models.TextField(blank=True, default="", verbose_name="프로그램 설명")
+    expected_fee = models.CharField(max_length=50, blank=True, default="무료", verbose_name="예상 참가비")
+    expected_time = models.CharField(max_length=100, blank=True, default="", verbose_name="예상 시간")
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default="DRAFT",
+        verbose_name="상태",
+    )
+    accessibility_note = models.CharField(
+        max_length=255,
+        blank=True,
+        default="",
+        verbose_name="접근성 설명",
+    )
+    cultural_context = models.TextField(
+        blank=True,
+        default="",
+        verbose_name="문화적 맥락 설명",
+    )
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="생성일")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="수정일")
+
+    class Meta:
+        verbose_name = "프로그램 제안"
+        verbose_name_plural = "프로그램 제안 목록"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return self.title
