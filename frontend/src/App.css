@@ -1144,3 +1144,21 @@ button:disabled {
   cursor: not-allowed;
   box-shadow: none;
 }
+
+.space-reason {
+  margin: 8px 0 0;
+  color: #777;
+  font-size: 13px;
+  line-height: 1.45;
+  word-break: keep-all;
+}
+
+.match-reason {
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 14px;
+  background: #fff3c7;
+  color: #8a5b00;
+  font-weight: 800;
+  line-height: 1.5;
+}
