@@ -633,7 +633,7 @@ function App() {
 
       {page === 'creator' && (
         <CreatorModePage
-          calls={cultureCalls}
+          calls={serverCalls}
           spaces={creatorSpaces}
           onBack={goHome}
         />
@@ -1038,7 +1038,7 @@ function CalltureListPage({
   isLoading,
 }) {
   const [isDetailOpen, setIsDetailOpen] = useState(false)
-
+  
   if (isLoading) {
   return (
     <PageLayout onBack={onBack}>
@@ -1305,11 +1305,21 @@ function NaverMap({ places = [] }) {
 }
 
 function CreatorModePage({ calls, spaces, onBack }) {
-  const readyCalls = calls.filter((call) => call.current / call.goal >= 0.7)
-  const [selectedCall, setSelectedCall] = useState(readyCalls[0])
+  const readyCalls = calls.filter((call) => call.current >= 3)
+  const [selectedCall, setSelectedCall] = useState(readyCalls[0] || null)
   const [selectedSpace, setSelectedSpace] = useState(spaces[0])
   const [isDetailOpen, setIsDetailOpen] = useState(false)
-
+  if (readyCalls.length === 0 || !selectedCall) {
+    return (
+      <PageLayout onBack={onBack}>
+        <section className="section-header">
+          <p className="eyebrow">Callture</p>
+          <h1>관리자</h1>
+          <p>아직 3명 이상 모인 요청이 없습니다.</p>
+        </section>
+      </PageLayout>
+    )
+  }
   return (
     <PageLayout onBack={onBack}>
       <section className="section-header">
