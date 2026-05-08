@@ -101,7 +101,7 @@ def find_or_create_cluster(culture_request):
         preferred_time=culture_request.preferred_time,
         budget_range=culture_request.budget_range,
         request_count=0,
-        threshold=5,
+        threshold=30,
         status="GATHERING",
     )
 
