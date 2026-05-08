@@ -186,14 +186,16 @@ class CultureRequestDetailSerializer(serializers.ModelSerializer):
 
 
 class RequestClusterListSerializer(serializers.ModelSerializer):
-    """
-    요청 군집 목록 조회용 serializer입니다.
-    """
-
     status_display = serializers.CharField(
         source="get_status_display",
         read_only=True,
     )
+    fair_score = serializers.SerializerMethodField()
+    fair_reason = serializers.SerializerMethodField()
+    progress_ratio = serializers.SerializerMethodField()
+    remaining_count = serializers.SerializerMethodField()
+    is_ready = serializers.SerializerMethodField()
+    status_message = serializers.SerializerMethodField()
 
     class Meta:
         model = RequestCluster
@@ -210,8 +212,14 @@ class RequestClusterListSerializer(serializers.ModelSerializer):
             "budget_range",
             "request_count",
             "threshold",
+            "progress_ratio",
+            "remaining_count",
+            "is_ready",
             "status",
             "status_display",
+            "status_message",
+            "fair_score",
+            "fair_reason",
             "created_at",
             "updated_at",
         ]
