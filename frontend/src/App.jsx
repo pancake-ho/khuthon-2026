@@ -397,6 +397,8 @@ function App() {
   const [selectedCall, setSelectedCall] = useState(cultureCalls[0])
   const [serverCalls, setServerCalls] = useState([])
   const [isLoadingCalls, setIsLoadingCalls] = useState(false)
+  const [serverPrograms, setServerPrograms] = useState([])
+  const [isSubmittingRequest, setIsSubmittingRequest] = useState(false)
   const [isHelpOpen, setIsHelpOpen] = useState(false)
   const [isFeatureOpen, setIsFeatureOpen] = useState(false)
   const [isAdminLoginOpen, setIsAdminLoginOpen] = useState(false)
@@ -430,6 +432,85 @@ function App() {
       : [],
   })
 
+  const getIconByCategory = (category) => {
+    if (category === 'TRADITION') return '🏮'
+    if (category === 'PERFORMANCE') return '🎸'
+    if (category === 'EXHIBITION') return '🖼️'
+    if (category === 'EXPERIENCE') return '🎨'
+    return '📮'
+  }
+
+  const getBudgetLabel = (budget) => {
+    if (budget === 'FREE') return '무료'
+    if (budget === 'UNDER_10000') return '1만원 이하'
+    if (budget === 'UNDER_30000') return '3만원 이하'
+    if (budget === 'UNDER_50000') return '5만원 이하'
+    return '상관없음'
+  }
+
+  const convertProgramToMatchedProgram = (program) => {
+    const cluster = program.cluster || {}
+
+    return {
+      id: program.id,
+      icon: getIconByCategory(cluster.main_category),
+      title: program.title,
+      creator: program.creator_name || '지역 창작자 매칭 예정',
+      creatorInfo: [
+        program.is_local_creator ? '지역 창작자' : null,
+        program.is_small_creator ? '소규모 창작자' : null,
+        program.is_traditional ? '전통문화 연계' : null,
+      ].filter(Boolean).join(' / ') || '창작자 정보 준비 중',
+      space: program.place_name || '공공공간 매칭 예정',
+      spaceInfo: program.address || cluster.region_label || '공간 정보 준비 중',
+      status: '신청자 모집 중',
+      original: program,
+    }
+  }
+
+  const convertProgramToMyProgram = (program) => {
+    const cluster = program.cluster || {}
+
+    return {
+      id: program.id,
+      icon: getIconByCategory(cluster.main_category),
+      title: program.title,
+      date: cluster.preferred_time || '일정 협의 중',
+      place: program.place_name || program.address || '공공공간 매칭 예정',
+      target: cluster.target_age || '누구나',
+      fee: getBudgetLabel(cluster.budget_range),
+      status: '신청 가능',
+      original: program,
+    }
+  }
+
+  const createProgramFromCluster = async (clusterId) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/clusters/${clusterId}/create-program/`, {
+        method: 'POST',
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        console.error(data)
+        alert(data.error || '아직 프로그램으로 생성할 수 없습니다.')
+        return
+      }
+
+      alert('문화 프로그램이 생성되었습니다!')
+
+      await fetchClusters()
+      await fetchPrograms()
+
+      setPage('matching')
+    } catch (error) {
+      console.error(error)
+      alert('프로그램 생성 중 오류가 발생했습니다.')
+    }
+  }
+
+
   const fetchClusters = async () => {
     try {
       setIsLoadingCalls(true)
@@ -455,8 +536,24 @@ function App() {
     }
   }
 
+  const fetchPrograms = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/programs/`)
+
+      if (!response.ok) {
+        throw new Error('프로그램 목록을 불러오지 못했습니다.')
+      }
+
+      const data = await response.json()
+      setServerPrograms(data)
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
   useEffect(() => {
     fetchClusters()
+    fetchPrograms()
   }, [])
 
   const goHome = () => {
@@ -493,43 +590,47 @@ function App() {
   }
 
   const submitRequest = async () => {
-  if (!requestForm.regionGroup || !requestForm.regionDetail) {
-    alert('지역을 선택해주세요.')
+  if (isSubmittingRequest) {
     return
   }
 
-  if (!requestForm.time) {
-    alert('시간대를 선택해주세요.')
-    return
-  }
-
-  if (!requestForm.budget) {
-    alert('예산을 선택해주세요.')
-    return
-  }
-
-  if (!requestForm.message.trim()) {
-    alert('요청 내용을 입력해주세요.')
-    return
-  }
-
-  const payload = {
-    requester_nickname: '익명',
-    title:
-      requestForm.message.trim().length > 30
-        ? `${requestForm.message.trim().slice(0, 30)}...`
-        : requestForm.message.trim(),
-    content: requestForm.message.trim(),
-    sido: requestForm.regionGroup,
-    sigungu: requestForm.regionDetail,
-    category: getCategoryFromMessage(requestForm.message),
-    target_age: 'ALL',
-    preferred_time: TIME_VALUE_MAP[requestForm.time] || 'ANYTIME',
-    budget_range: BUDGET_VALUE_MAP[requestForm.budget] || 'UNDER_30000',
-    mobility_limit: '',
-  }
+  setIsSubmittingRequest(true)
 
   try {
+    if (!requestForm.regionGroup || !requestForm.regionDetail) {
+      alert('지역을 선택해주세요.')
+      return
+    }
+
+    if (!requestForm.time) {
+      alert('시간대를 선택해주세요.')
+      return
+    }
+
+    if (!requestForm.budget) {
+      alert('예산을 선택해주세요.')
+      return
+    }
+
+    if (!requestForm.message.trim()) {
+      alert('요청 내용을 입력해주세요.')
+      return
+    }
+
+    const payload = {
+      title:
+        requestForm.message.trim().length > 30
+          ? `${requestForm.message.trim().slice(0, 30)}...`
+          : requestForm.message.trim(),
+      content: requestForm.message.trim(),
+      sido: requestForm.regionGroup,
+      sigungu: requestForm.regionDetail,
+      main_category: getCategoryFromMessage(requestForm.message),
+      target_age: 'ALL',
+      preferred_time: TIME_VALUE_MAP[requestForm.time] || 'WEEKDAY_AFTERNOON',
+      budget_range: BUDGET_VALUE_MAP[requestForm.budget] || 'UNDER_30000',
+    }
+
     const response = await fetch(`${API_BASE_URL}/requests/`, {
       method: 'POST',
       headers: {
@@ -558,10 +659,13 @@ function App() {
     })
 
     await fetchClusters()
+    await fetchPrograms()
     setPage('list')
   } catch (error) {
     console.error(error)
     alert('서버 연결에 실패했습니다. 백엔드 서버가 켜져 있는지 확인해주세요.')
+  } finally {
+    setIsSubmittingRequest(false)
   }
 }
 
@@ -614,6 +718,7 @@ function App() {
           onClearRegion={clearRegion}
           onSubmit={submitRequest}
           onBack={goHome}
+          isSubmitting={isSubmittingRequest}
         />
       )}
 
@@ -636,12 +741,13 @@ function App() {
           calls={serverCalls}
           spaces={creatorSpaces}
           onBack={goHome}
+          onCreateProgram={createProgramFromCluster}
         />
       )}
 
       {page === 'matching' && (
         <MatchingPage
-          programs={matchedPrograms}
+          programs={serverPrograms.map(convertProgramToMatchedProgram)}
           onMyProgramClick={() => setPage('my')}
           onBack={goHome}
         />
@@ -649,7 +755,7 @@ function App() {
 
       {page === 'my' && (
         <MyProgramPage
-          programs={myPrograms}
+          programs={serverPrograms.map(convertProgramToMyProgram)}
           onBack={goHome}
         />
       )}
@@ -853,6 +959,7 @@ function RequestPage({
   onClearRegion,
   onSubmit,
   onBack,
+  isSubmitting,
 }) {
   const [isTimeOpen, setIsTimeOpen] = useState(false)
   const [isBudgetOpen, setIsBudgetOpen] = useState(false)
@@ -1019,8 +1126,13 @@ function RequestPage({
           />
         </FormGroup>
 
-        <button className="primary-button full-button" onClick={onSubmit}>
-          등록
+        <button
+          type="button"
+          className="primary-button full-button"
+          onClick={onSubmit}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? '등록 중...' : '등록'}
         </button>
       </section>
     </PageLayout>
@@ -1304,22 +1416,34 @@ function NaverMap({ places = [] }) {
   )
 }
 
-function CreatorModePage({ calls, spaces, onBack }) {
-  const readyCalls = calls.filter((call) => call.current >= 3)
-  const [selectedCall, setSelectedCall] = useState(readyCalls[0] || null)
-  const [selectedSpace, setSelectedSpace] = useState(spaces[0])
+function CreatorModePage({ calls, spaces, onBack, onCreateProgram }) {
+  const readyCalls = useMemo(
+    () => calls.filter((call) => call.current >= call.goal),
+    [calls]
+  )
+
+  const [selectedCall, setSelectedCall] = useState(null)
+  const [selectedSpace, setSelectedSpace] = useState(spaces[0] || null)
   const [isDetailOpen, setIsDetailOpen] = useState(false)
+
+  useEffect(() => {
+    if (!selectedCall && readyCalls.length > 0) {
+      setSelectedCall(readyCalls[0])
+    }
+  }, [readyCalls, selectedCall])
+
   if (readyCalls.length === 0 || !selectedCall) {
     return (
       <PageLayout onBack={onBack}>
         <section className="section-header">
           <p className="eyebrow">Callture</p>
           <h1>관리자</h1>
-          <p>아직 3명 이상 모인 요청이 없습니다.</p>
+          <p>아직 매칭 가능한 요청이 없습니다.</p>
         </section>
       </PageLayout>
     )
   }
+
   return (
     <PageLayout onBack={onBack}>
       <section className="section-header">
@@ -1403,9 +1527,21 @@ function CreatorModePage({ calls, spaces, onBack }) {
 
         <button
           className="primary-button full-button"
-          onClick={() => alert('공간 매칭이 저장되었습니다!')}
+          onClick={() => {
+            if (!selectedCall) {
+              alert('매칭할 요청을 선택해주세요.')
+              return
+            }
+
+            if (selectedCall.current < selectedCall.goal) {
+              alert('아직 요청 수가 부족합니다.')
+              return
+            }
+
+            onCreateProgram(selectedCall.id)
+          }}
         >
-          매칭
+          {selectedCall && selectedCall.current >= selectedCall.goal ? '매칭' : '요청 모집 중'}
         </button>
       </section>
     </PageLayout>
