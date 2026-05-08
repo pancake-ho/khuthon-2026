@@ -91,7 +91,7 @@ class RequestCluster(models.Model):
     )
 
     threshold = models.PositiveIntegerField(
-        default=5,
+        default=30,
         verbose_name="프로그램 생성 기준 요청 수",
     )
 
