@@ -321,6 +321,8 @@ class RequestClusterListSerializer(serializers.ModelSerializer):
             "status",
             "status_display",
             "status_message",
+            "fair_score",
+            "fair_reason"
             "created_at",
             "updated_at",
         ]
