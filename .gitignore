@@ -16,3 +16,5 @@ media/
 
 # Environment variables
 .env
+*.debㄴ
+*.deb
