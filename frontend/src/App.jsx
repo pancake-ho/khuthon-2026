@@ -9,38 +9,32 @@ const TIME_VALUE_MAP = {
   '평일 오전': 'WEEKDAY_MORNING',
   '평일 오후': 'WEEKDAY_AFTERNOON',
   '평일 저녁': 'WEEKDAY_EVENING',
-  '금요일 저녁': 'FRIDAY_EVENING',
-  '토요일 오전': 'SATURDAY_MORNING',
-  '토요일 오후': 'SATURDAY_AFTERNOON',
-  '일요일 오후': 'SUNDAY_AFTERNOON',
+  '금요일 저녁': 'WEEKDAY_EVENING',
+  '토요일 오전': 'WEEKEND_MORNING',
+  '토요일 오후': 'WEEKEND_AFTERNOON',
+  '일요일 오후': 'WEEKEND_AFTERNOON',
 }
 
 const BUDGET_VALUE_MAP = {
   '무료': 'FREE',
   '3만원 이내': 'UNDER_30000',
   '5만원 이내': 'UNDER_50000',
-  '10만원 이내': 'UNDER_100000',
-  '10만원 이상': 'OVER_100000',
+  '10만원 이내': 'ANY',
+  '10만원 이상': 'ANY',
 }
 
 const getCategoryFromMessage = (message) => {
   if (message.includes('전통') || message.includes('한복') || message.includes('국악')) {
-    return 'TRADITIONAL'
+    return 'TRADITION'
   }
-  if (message.includes('공예') || message.includes('한지') || message.includes('만들기')) {
-    return 'CRAFT'
-  }
-  if (message.includes('공연') || message.includes('연극')) {
+  if (message.includes('공연') || message.includes('연극') || message.includes('음악') || message.includes('밴드') || message.includes('인디')) {
     return 'PERFORMANCE'
   }
   if (message.includes('전시') || message.includes('작가') || message.includes('미술')) {
     return 'EXHIBITION'
   }
-  if (message.includes('음악') || message.includes('밴드') || message.includes('인디')) {
-    return 'MUSIC'
-  }
-  if (message.includes('체험') || message.includes('수업') || message.includes('클래스')) {
-    return 'CLASS'
+  if (message.includes('체험') || message.includes('수업') || message.includes('클래스') || message.includes('공예') || message.includes('한지') || message.includes('만들기')) {
+    return 'EXPERIENCE'
   }
   return 'ETC'
 }
