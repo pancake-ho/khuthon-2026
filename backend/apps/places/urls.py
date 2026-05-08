@@ -5,6 +5,9 @@ from .views import (
     CultureRequestListCreateView,
     RequestClusterDetailView,
     RequestClusterListView,
+    CreatorListView,
+    PublicSpaceListView,
+    ProgramProposalListView,
     request_options_view,
     dashboard_summary_view,
 )
@@ -18,4 +21,8 @@ urlpatterns = [
 
     path("clusters/", RequestClusterListView.as_view(), name="cluster-list"),
     path("clusters/<int:pk>/", RequestClusterDetailView.as_view(), name="cluster-detail"),
+
+    path("creators/", CreatorListView.as_view(), name="creator-list"),
+    path("spaces/", PublicSpaceListView.as_view(), name="space-list"),
+    path("programs/", ProgramProposalListView.as_view(), name="program-list"),
 ]

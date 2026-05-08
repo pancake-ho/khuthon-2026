@@ -4,15 +4,23 @@ from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import CultureRequest, RequestCluster
+from .models import (
+    CultureRequest,
+    RequestCluster,
+    Creator,
+    PublicSpace,
+    ProgramProposal,
+)
 from .serializers import (
     CultureRequestCreateSerializer,
     CultureRequestDetailSerializer,
     CultureRequestListSerializer,
     RequestClusterDetailSerializer,
     RequestClusterListSerializer,
+    CreatorSerializer,
+    PublicSpaceSerializer,
+    ProgramProposalSerializer,
 )
-
 
 def extract_simple_keywords(text):
     """
@@ -353,3 +361,83 @@ def dashboard_summary_view(request):
         },
         status=status.HTTP_200_OK,
     )
+
+
+class CreatorListView(ListAPIView):
+    """
+    지역 창작자 목록 조회 API입니다.
+
+    GET /api/creators/
+    """
+
+    serializer_class = CreatorSerializer
+
+    def get_queryset(self):
+        queryset = Creator.objects.all()
+
+        region_label = self.request.query_params.get("region_label")
+        category = self.request.query_params.get("category")
+        is_traditional = self.request.query_params.get("is_traditional")
+
+        if region_label:
+            queryset = queryset.filter(region_label__icontains=region_label)
+
+        if category:
+            queryset = queryset.filter(category__icontains=category)
+
+        if is_traditional in ["true", "True", "1"]:
+            queryset = queryset.filter(is_traditional=True)
+
+        return queryset
+
+
+class PublicSpaceListView(ListAPIView):
+    """
+    공공공간 목록 조회 API입니다.
+
+    GET /api/spaces/
+    """
+
+    serializer_class = PublicSpaceSerializer
+
+    def get_queryset(self):
+        queryset = PublicSpace.objects.all()
+
+        region_label = self.request.query_params.get("region_label")
+        good_for = self.request.query_params.get("good_for")
+
+        if region_label:
+            queryset = queryset.filter(region_label__icontains=region_label)
+
+        if good_for:
+            queryset = queryset.filter(good_for__icontains=good_for)
+
+        return queryset
+
+
+class ProgramProposalListView(ListAPIView):
+    """
+    프로그램 후보 목록 조회 API입니다.
+
+    GET /api/programs/
+    """
+
+    serializer_class = ProgramProposalSerializer
+
+    def get_queryset(self):
+        queryset = ProgramProposal.objects.select_related(
+            "cluster",
+            "creator",
+            "space",
+        ).all()
+
+        status_value = self.request.query_params.get("status")
+        region_label = self.request.query_params.get("region_label")
+
+        if status_value:
+            queryset = queryset.filter(status=status_value)
+
+        if region_label:
+            queryset = queryset.filter(cluster__region_label__icontains=region_label)
+
+        return queryset

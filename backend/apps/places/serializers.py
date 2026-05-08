@@ -1,6 +1,12 @@
 from rest_framework import serializers
 
-from .models import CultureRequest, RequestCluster
+from .models import (
+    CultureRequest,
+    RequestCluster,
+    Creator,
+    PublicSpace,
+    ProgramProposal,
+)
 
 
 class CultureRequestCreateSerializer(serializers.ModelSerializer):
@@ -322,7 +328,7 @@ class RequestClusterListSerializer(serializers.ModelSerializer):
             "status_display",
             "status_message",
             "fair_score",
-            "fair_reason"
+            "fair_reason",
             "created_at",
             "updated_at",
         ]
@@ -394,3 +400,66 @@ class RequestClusterListSerializer(serializers.ModelSerializer):
             reasons.append("사용자 요청 기반으로 형성된 문화 수요입니다.")
 
         return reasons
+    
+
+class CreatorSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Creator
+        fields = [
+            "id",
+            "name",
+            "region_label",
+            "category",
+            "description",
+            "is_local_creator",
+            "is_traditional",
+            "contact",
+            "created_at",
+        ]
+
+
+class PublicSpaceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PublicSpace
+        fields = [
+            "id",
+            "name",
+            "region_label",
+            "address",
+            "capacity",
+            "available_time",
+            "good_for",
+            "description",
+            "latitude",
+            "longitude",
+            "created_at",
+        ]
+
+
+class ProgramProposalSerializer(serializers.ModelSerializer):
+    cluster_title = serializers.CharField(source="cluster.title", read_only=True)
+    creator_name = serializers.CharField(source="creator.name", read_only=True)
+    space_name = serializers.CharField(source="space.name", read_only=True)
+    status_display = serializers.CharField(source="get_status_display", read_only=True)
+
+    class Meta:
+        model = ProgramProposal
+        fields = [
+            "id",
+            "cluster",
+            "cluster_title",
+            "creator",
+            "creator_name",
+            "space",
+            "space_name",
+            "title",
+            "description",
+            "expected_fee",
+            "expected_time",
+            "status",
+            "status_display",
+            "accessibility_note",
+            "cultural_context",
+            "created_at",
+            "updated_at",
+        ]
