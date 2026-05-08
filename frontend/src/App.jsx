@@ -1,7 +1,49 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import './App.css'
 
 const ADMIN_PASSWORD = '0000'
+
+const API_BASE_URL = 'http://127.0.0.1:8000/api'
+
+const TIME_VALUE_MAP = {
+  '평일 오전': 'WEEKDAY_MORNING',
+  '평일 오후': 'WEEKDAY_AFTERNOON',
+  '평일 저녁': 'WEEKDAY_EVENING',
+  '금요일 저녁': 'FRIDAY_EVENING',
+  '토요일 오전': 'SATURDAY_MORNING',
+  '토요일 오후': 'SATURDAY_AFTERNOON',
+  '일요일 오후': 'SUNDAY_AFTERNOON',
+}
+
+const BUDGET_VALUE_MAP = {
+  '무료': 'FREE',
+  '3만원 이내': 'UNDER_30000',
+  '5만원 이내': 'UNDER_50000',
+  '10만원 이내': 'UNDER_100000',
+  '10만원 이상': 'OVER_100000',
+}
+
+const getCategoryFromMessage = (message) => {
+  if (message.includes('전통') || message.includes('한복') || message.includes('국악')) {
+    return 'TRADITIONAL'
+  }
+  if (message.includes('공예') || message.includes('한지') || message.includes('만들기')) {
+    return 'CRAFT'
+  }
+  if (message.includes('공연') || message.includes('연극')) {
+    return 'PERFORMANCE'
+  }
+  if (message.includes('전시') || message.includes('작가') || message.includes('미술')) {
+    return 'EXHIBITION'
+  }
+  if (message.includes('음악') || message.includes('밴드') || message.includes('인디')) {
+    return 'MUSIC'
+  }
+  if (message.includes('체험') || message.includes('수업') || message.includes('클래스')) {
+    return 'CLASS'
+  }
+  return 'ETC'
+}
 
 const TIME_OPTIONS = [
   '평일 오전',
@@ -327,6 +369,8 @@ const myPrograms = [
 function App() {
   const [page, setPage] = useState('home')
   const [selectedCall, setSelectedCall] = useState(cultureCalls[0])
+  const [serverCalls, setServerCalls] = useState([])
+  const [isLoadingCalls, setIsLoadingCalls] = useState(false)
   const [isHelpOpen, setIsHelpOpen] = useState(false)
   const [isFeatureOpen, setIsFeatureOpen] = useState(false)
   const [isAdminLoginOpen, setIsAdminLoginOpen] = useState(false)
@@ -341,6 +385,53 @@ function App() {
     place: '',
     message: '',
   })
+
+  const convertClusterToCall = (cluster) => ({
+    id: cluster.id,
+    icon: '📮',
+    title: cluster.title,
+    genre: cluster.main_category || '기타',
+    target: cluster.target_age || '전체',
+    time: cluster.preferred_time || '상관없음',
+    place: cluster.region_label || `${cluster.sido} ${cluster.sigungu}`,
+    current: cluster.request_count,
+    goal: cluster.threshold,
+    createdAt: cluster.created_at?.slice(0, 10) || '',
+    summary: cluster.summary,
+    detail: cluster.summary,
+    similarRequests: cluster.requests
+      ? cluster.requests.map((request) => request.content)
+      : [],
+  })
+
+  const fetchClusters = async () => {
+    try {
+      setIsLoadingCalls(true)
+
+      const response = await fetch(`${API_BASE_URL}/clusters/`)
+
+      if (!response.ok) {
+        throw new Error('문화콜 목록을 불러오지 못했습니다.')
+      }
+
+      const data = await response.json()
+      const convertedCalls = data.map(convertClusterToCall)
+
+      setServerCalls(convertedCalls)
+
+      if (convertedCalls.length > 0) {
+        setSelectedCall(convertedCalls[0])
+      }
+    } catch (error) {
+      console.error(error)
+    } finally {
+      setIsLoadingCalls(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchClusters()
+  }, [])
 
   const goHome = () => {
     setPage('home')
@@ -375,10 +466,78 @@ function App() {
     }))
   }
 
-  const submitRequest = () => {
-    alert('Callture 요청이 등록되었습니다!')
-    setPage('list')
+  const submitRequest = async () => {
+  if (!requestForm.regionGroup || !requestForm.regionDetail) {
+    alert('지역을 선택해주세요.')
+    return
   }
+
+  if (!requestForm.time) {
+    alert('시간대를 선택해주세요.')
+    return
+  }
+
+  if (!requestForm.budget) {
+    alert('예산을 선택해주세요.')
+    return
+  }
+
+  if (!requestForm.message.trim()) {
+    alert('요청 내용을 입력해주세요.')
+    return
+  }
+
+  const payload = {
+    requester_nickname: '익명',
+    title:
+      requestForm.message.trim().length > 30
+        ? `${requestForm.message.trim().slice(0, 30)}...`
+        : requestForm.message.trim(),
+    content: requestForm.message.trim(),
+    sido: requestForm.regionGroup,
+    sigungu: requestForm.regionDetail,
+    category: getCategoryFromMessage(requestForm.message),
+    target_age: 'ALL',
+    preferred_time: TIME_VALUE_MAP[requestForm.time] || 'ANYTIME',
+    budget_range: BUDGET_VALUE_MAP[requestForm.budget] || 'UNDER_30000',
+    mobility_limit: '',
+  }
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/requests/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    })
+
+    const data = await response.json()
+
+    if (!response.ok) {
+      console.error(data)
+      alert('요청 등록에 실패했습니다. 입력값을 확인해주세요.')
+      return
+    }
+
+    alert('Callture 요청이 등록되었습니다!')
+
+    setRequestForm({
+      time: '',
+      budget: '',
+      regionGroup: '',
+      regionDetail: '',
+      place: '',
+      message: '',
+    })
+
+    await fetchClusters()
+    setPage('list')
+  } catch (error) {
+    console.error(error)
+    alert('서버 연결에 실패했습니다. 백엔드 서버가 켜져 있는지 확인해주세요.')
+  }
+}
 
   const openAdminMode = () => {
     if (isAdminAuthenticated) {
@@ -434,13 +593,14 @@ function App() {
 
       {page === 'list' && (
         <CalltureListPage
-          calls={cultureCalls}
+          calls={serverCalls.length > 0 ? serverCalls : cultureCalls}
           selectedCall={selectedCall}
           onSelect={moveToDetail}
           onRequestClick={() => setPage('request')}
           filter={filter}
           onFilterChange={setFilter}
           onBack={goHome}
+          isLoading={isLoadingCalls}
         />
       )}
 
