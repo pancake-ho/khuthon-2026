@@ -47,7 +47,6 @@ ALLOWED_HOSTS = os.getenv(
 # =========================
 
 INSTALLED_APPS = [
-    # Django 기본 앱
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -55,13 +54,12 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
 
-    # Third-party 앱
     "rest_framework",
     "corsheaders",
 
-    # Local apps
-    # 앱을 만든 뒤 아래에 추가하면 됩니다.
-    "apps.places",
+    "api.apps.ApiConfig",
+    # places를 지도/공공공간 DB용으로 계속 쓸 거면 유지
+    # "apps.places",
 ]
 
 MIDDLEWARE = [
