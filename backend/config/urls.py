@@ -24,7 +24,7 @@ urlpatterns = [
     path("api/system_check/", system_check, name="system_check"),
 
     # Places API
-    path("api/places/", include("app.places.urls"))
+    path("api/", include("apps.places.urls"))
 ]
 
 
