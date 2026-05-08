@@ -1,5 +1,5 @@
 """
-Django 프로젝트의 백엔드 및 프론트엔드 기본 설정 파일
+Django 프로젝트의 백엔드 및 프론트엔드 기본 설정 파일, (추가) 네이버 지도 API
 현재 기준
 - BE: DJango
 - FE: React 전제
@@ -61,7 +61,7 @@ INSTALLED_APPS = [
 
     # Local apps
     # 앱을 만든 뒤 아래에 추가하면 됩니다.
-    # "apps.users",
+    "apps.users",
     # "apps.requests",
     # "apps.creators",
     # "apps.programs",
@@ -215,3 +215,10 @@ CORS_ALLOW_ALL_ORIGINS = False
 # =========================
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+
+# =========================
+# NAVER Map Key
+# =========================
+
+NAVER_MAP_CLIENT_ID = os.getenv("NAVER_MAP_CLIENT_ID", "")
+NAVER_MAP_CLIENT_SECRET = os.getenv("NAVER_MAP_CLIENT_SECRET", "")

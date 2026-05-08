@@ -1,2 +1,22 @@
 .env
 khuthon/
+# Python virtual environment
+khuthon/
+venv/
+.venv/
+env/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Django
+*.sqlite3
+db.sqlite3
+media/
+
+# Environment variables
+.env
+*.debㄴ
+*.deb
