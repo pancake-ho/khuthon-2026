@@ -101,7 +101,7 @@ def find_or_create_cluster(culture_request):
         preferred_time=culture_request.preferred_time,
         budget_range=culture_request.budget_range,
         request_count=0,
-        threshold=30,
+        threshold=3,
         status="GATHERING",
     )
 
@@ -218,6 +218,7 @@ class RequestClusterListView(ListAPIView):
     def get_queryset(self):
         queryset = RequestCluster.objects.all()
 
+        sort = self.request.query_params.get("sort", "fair")
         sido = self.request.query_params.get("sido")
         sigungu = self.request.query_params.get("sigungu")
         status_value = self.request.query_params.get("status")
@@ -238,6 +239,21 @@ class RequestClusterListView(ListAPIView):
 
         if preferred_time:
             queryset = queryset.filter(preferred_time=preferred_time)
+
+        if sort == "latest":
+            queryset = queryset.order_by("-created_at")
+
+        elif sort == "ready":
+            queryset = queryset.order_by("-request_count", "-created_at")
+
+        elif sort == "traditional":
+            queryset = queryset.order_by("-created_at").filter(main_category="TRADITIONAL")
+
+        else:
+            # fair 기본값
+            # 아직 DB에서 fair_score 계산 정렬은 안 하므로,
+            # MVP에서는 READY 우선 + 요청 수 + 최신순으로 공정 노출 느낌을 줌
+            queryset = queryset.order_by("-request_count", "-created_at")
 
         return queryset
 
@@ -285,6 +301,55 @@ def request_options_view(request):
                 {"value": value, "label": label}
                 for value, label in RequestCluster.STATUS_CHOICES
             ],
+        },
+        status=status.HTTP_200_OK,
+    )
+
+
+@api_view(["GET"])
+def dashboard_summary_view(request):
+    """
+    홈 화면 및 발표용 지표 API입니다.
+
+    GET /api/dashboard/
+    """
+
+    total_requests = CultureRequest.objects.count()
+    total_clusters = RequestCluster.objects.count()
+    ready_clusters = RequestCluster.objects.filter(status="READY").count()
+    traditional_requests = CultureRequest.objects.filter(category="TRADITIONAL").count()
+    local_requests = CultureRequest.objects.filter(category="LOCAL").count()
+
+    top_regions = (
+        CultureRequest.objects
+        .values("region_label")
+        .order_by("region_label")
+    )
+
+    region_count_map = {}
+    for item in top_regions:
+        region = item["region_label"] or "미지정"
+        region_count_map[region] = region_count_map.get(region, 0) + 1
+
+    sorted_regions = sorted(
+        region_count_map.items(),
+        key=lambda x: x[1],
+        reverse=True,
+    )[:5]
+    
+
+    return Response(
+        {
+            "total_requests": total_requests,
+            "total_clusters": total_clusters,
+            "ready_clusters": ready_clusters,
+            "traditional_requests": traditional_requests,
+            "local_requests": local_requests,
+            "top_regions": [
+                {"region": region, "count": count}
+                for region, count in sorted_regions
+            ],
+            "message": "문화콜은 사용자의 요청을 모아 지역 문화 프로그램으로 연결합니다.",
         },
         status=status.HTTP_200_OK,
     )
