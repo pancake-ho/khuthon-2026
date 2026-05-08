@@ -3,6 +3,114 @@ import './App.css'
 
 const ADMIN_PASSWORD = '0000'
 
+const TIME_OPTIONS = [
+  '평일 오전',
+  '평일 오후',
+  '평일 저녁',
+  '금요일 저녁',
+  '토요일 오전',
+  '토요일 오후',
+  '일요일 오후',
+  '취소',
+]
+
+const BUDGET_OPTIONS = [
+  '무료',
+  '3만원 이내',
+  '5만원 이내',
+  '10만원 이내',
+  '10만원 이상',
+  '취소',
+]
+
+const REGION_GROUPS = {
+  서울: [
+    '종로구', '중구', '용산구', '성동구', '광진구',
+    '동대문구', '중랑구', '성북구', '강북구', '도봉구',
+    '노원구', '은평구', '서대문구', '마포구', '양천구',
+    '강서구', '구로구', '금천구', '영등포구', '동작구',
+    '관악구', '서초구', '강남구', '송파구', '강동구',
+  ],
+
+  경기: [
+    '수원시', '성남시', '의정부시', '안양시', '부천시',
+    '광명시', '평택시', '동두천시', '안산시', '고양시',
+    '과천시', '구리시', '남양주시', '오산시', '시흥시',
+    '군포시', '의왕시', '하남시', '용인시', '파주시',
+    '이천시', '안성시', '김포시', '화성시', '광주시',
+    '양주시', '포천시', '여주시', '연천군', '가평군',
+    '양평군',
+  ],
+
+  인천: [
+    '중구', '동구', '미추홀구', '연수구', '남동구',
+    '부평구', '계양구', '서구', '강화군', '옹진군',
+  ],
+
+  강원도: [
+    '춘천시', '원주시', '강릉시', '동해시', '태백시',
+    '속초시', '삼척시', '홍천군', '횡성군', '영월군',
+    '평창군', '정선군', '철원군', '화천군', '양구군',
+    '인제군', '고성군', '양양군',
+  ],
+
+  경상도: [
+    '부산 중구', '부산 서구', '부산 동구', '부산 영도구',
+    '부산 부산진구', '부산 동래구', '부산 남구', '부산 북구',
+    '부산 해운대구', '부산 사하구', '부산 금정구', '부산 강서구',
+    '부산 연제구', '부산 수영구', '부산 사상구', '부산 기장군',
+
+    '대구 중구', '대구 동구', '대구 서구', '대구 남구',
+    '대구 북구', '대구 수성구', '대구 달서구', '대구 달성군',
+    '대구 군위군',
+
+    '울산 중구', '울산 남구', '울산 동구', '울산 북구', '울산 울주군',
+
+    '포항시', '경주시', '김천시', '안동시', '구미시',
+    '영주시', '영천시', '상주시', '문경시', '경산시',
+    '의성군', '청송군', '영양군', '영덕군', '청도군',
+    '고령군', '성주군', '칠곡군', '예천군', '봉화군',
+    '울진군', '울릉군',
+
+    '창원시', '진주시', '통영시', '사천시', '김해시',
+    '밀양시', '거제시', '양산시', '의령군', '함안군',
+    '창녕군', '경남 고성군', '남해군', '하동군', '산청군',
+    '함양군', '거창군', '합천군',
+  ],
+
+  전라도: [
+    '광주 동구', '광주 서구', '광주 남구', '광주 북구', '광주 광산구',
+
+    '전주시', '군산시', '익산시', '정읍시', '남원시',
+    '김제시', '완주군', '진안군', '무주군', '장수군',
+    '임실군', '순창군', '고창군', '부안군',
+
+    '목포시', '여수시', '순천시', '나주시', '광양시',
+    '담양군', '곡성군', '구례군', '고흥군', '보성군',
+    '화순군', '장흥군', '강진군', '해남군', '영암군',
+    '무안군', '함평군', '영광군', '장성군', '완도군',
+    '진도군', '신안군',
+  ],
+
+  충청도: [
+    '대전 동구', '대전 중구', '대전 서구', '대전 유성구', '대전 대덕구',
+
+    '세종시',
+
+    '청주시', '충주시', '제천시', '보은군', '옥천군',
+    '영동군', '증평군', '진천군', '괴산군', '음성군',
+    '단양군',
+
+    '천안시', '공주시', '보령시', '아산시', '서산시',
+    '논산시', '계룡시', '당진시', '금산군', '부여군',
+    '서천군', '청양군', '홍성군', '예산군', '태안군',
+  ],
+
+  제주도: [
+    '제주시', '서귀포시',
+  ],
+}
+
 const cultureCalls = [
   {
     id: 1,
@@ -226,9 +334,10 @@ function App() {
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false)
   const [filter, setFilter] = useState('latest')
   const [requestForm, setRequestForm] = useState({
-    genre: '',
-    target: '',
     time: '',
+    budget: '',
+    regionGroup: '',
+    regionDetail: '',
     place: '',
     message: '',
   })
@@ -242,10 +351,28 @@ function App() {
   }
 
   const handleInputChange = (key, value) => {
-    setRequestForm({
-      ...requestForm,
+    setRequestForm((prev) => ({
+      ...prev,
       [key]: value,
-    })
+    }))
+  }
+
+  const handleRegionSelect = (group, detail) => {
+    setRequestForm((prev) => ({
+      ...prev,
+      regionGroup: group,
+      regionDetail: detail,
+      place: `${group} ${detail}`,
+    }))
+  }
+
+  const clearRegion = () => {
+    setRequestForm((prev) => ({
+      ...prev,
+      regionGroup: '',
+      regionDetail: '',
+      place: '',
+    }))
   }
 
   const submitRequest = () => {
@@ -298,6 +425,8 @@ function App() {
         <RequestPage
           requestForm={requestForm}
           onChange={handleInputChange}
+          onRegionSelect={handleRegionSelect}
+          onClearRegion={clearRegion}
           onSubmit={submitRequest}
           onBack={goHome}
         />
@@ -530,7 +659,51 @@ function AdminLoginModal({ password, onChangePassword, onSubmit, onClose }) {
   )
 }
 
-function RequestPage({ requestForm, onChange, onSubmit, onBack }) {
+function RequestPage({
+  requestForm,
+  onChange,
+  onRegionSelect,
+  onClearRegion,
+  onSubmit,
+  onBack,
+}) {
+  const [isTimeOpen, setIsTimeOpen] = useState(false)
+  const [isBudgetOpen, setIsBudgetOpen] = useState(false)
+  const [isRegionOpen, setIsRegionOpen] = useState(false)
+  const [openRegionGroup, setOpenRegionGroup] = useState('')
+
+  const handleTimeSelect = (option) => {
+    if (option === '취소') {
+      onChange('time', '')
+    } else {
+      onChange('time', option)
+    }
+    setIsTimeOpen(false)
+  }
+
+  const handleBudgetSelect = (option) => {
+    if (option === '취소') {
+      onChange('budget', '')
+    } else {
+      onChange('budget', option)
+    }
+    setIsBudgetOpen(false)
+  }
+
+  const handleRegionGroupClick = (group) => {
+    if (openRegionGroup === group) {
+      setOpenRegionGroup('')
+    } else {
+      setOpenRegionGroup(group)
+    }
+  }
+
+  const handleRegionDetailClick = (group, detail) => {
+    onRegionSelect(group, detail)
+    setOpenRegionGroup('')
+    setIsRegionOpen(false)
+  }
+
   return (
     <PageLayout onBack={onBack}>
       <section className="section-header">
@@ -539,71 +712,123 @@ function RequestPage({ requestForm, onChange, onSubmit, onBack }) {
       </section>
 
       <section className="form-card">
-        <FormGroup label="장르">
-          <div className="chip-row">
-            {['공연', '전시', '영화', '연극', '체험', '전통문화체험', '강연'].map(
-              (item) => (
+        <FormGroup label="시간대 선택">
+          <button
+            className="dropdown-toggle-button"
+            onClick={() => setIsTimeOpen(!isTimeOpen)}
+          >
+            <span>{requestForm.time || '시간대를 선택해주세요'}</span>
+            <strong>{isTimeOpen ? '▲' : '▼'}</strong>
+          </button>
+
+          {isTimeOpen && (
+            <div className="dropdown-option-panel">
+              {TIME_OPTIONS.map((option) => (
                 <button
-                  key={item}
-                  className={requestForm.genre === item ? 'chip active' : 'chip'}
-                  onClick={() => onChange('genre', item)}
+                  key={option}
+                  className={option === '취소' ? 'dropdown-option cancel-option' : 'dropdown-option'}
+                  onClick={() => handleTimeSelect(option)}
                 >
-                  {item}
+                  {option}
                 </button>
-              )
-            )}
-          </div>
+              ))}
+            </div>
+          )}
         </FormGroup>
 
-        <FormGroup label="대상">
-          <div className="chip-row">
-            {['청소년', '청년', '가족', '고령층', '누구나'].map((item) => (
-              <button
-                key={item}
-                className={requestForm.target === item ? 'chip active' : 'chip'}
-                onClick={() => onChange('target', item)}
-              >
-                {item}
-              </button>
-            ))}
-          </div>
-        </FormGroup>
+        <FormGroup label="예산 선택">
+          <button
+            className="dropdown-toggle-button"
+            onClick={() => setIsBudgetOpen(!isBudgetOpen)}
+          >
+            <span>{requestForm.budget || '예산을 선택해주세요'}</span>
+            <strong>{isBudgetOpen ? '▲' : '▼'}</strong>
+          </button>
 
-        <FormGroup label="시간">
-          <div className="chip-row">
-            {['평일 낮', '평일 저녁', '주말 낮', '주말 저녁'].map((item) => (
-              <button
-                key={item}
-                className={requestForm.time === item ? 'chip active' : 'chip'}
-                onClick={() => onChange('time', item)}
-              >
-                {item}
-              </button>
-            ))}
-          </div>
-        </FormGroup>
-
-        <FormGroup label="장소">
-          <div className="chip-row">
-            {['도서관', '주민센터', '공원', '학교', '청년센터', '복지관', '상관없음'].map(
-              (item) => (
+          {isBudgetOpen && (
+            <div className="dropdown-option-panel">
+              {BUDGET_OPTIONS.map((option) => (
                 <button
-                  key={item}
-                  className={requestForm.place === item ? 'chip active' : 'chip'}
-                  onClick={() => onChange('place', item)}
+                  key={option}
+                  className={option === '취소' ? 'dropdown-option cancel-option' : 'dropdown-option'}
+                  onClick={() => handleBudgetSelect(option)}
                 >
-                  {item}
+                  {option}
                 </button>
-              )
-            )}
-          </div>
+              ))}
+            </div>
+          )}
         </FormGroup>
 
-        <FormGroup label="한 줄 요청">
+        <FormGroup label="지역 선택">
+          <button
+            className="dropdown-toggle-button"
+            onClick={() => setIsRegionOpen(!isRegionOpen)}
+          >
+            <span>
+              {requestForm.regionGroup && requestForm.regionDetail
+                ? `${requestForm.regionGroup} · ${requestForm.regionDetail}`
+                : '큰 지역을 선택해주세요'}
+            </span>
+            <strong>{isRegionOpen ? '▲' : '▼'}</strong>
+          </button>
+
+          {requestForm.regionGroup && requestForm.regionDetail && (
+            <button className="region-clear-button" onClick={onClearRegion}>
+              지역 선택 취소
+            </button>
+          )}
+
+          {isRegionOpen && (
+            <div className="region-dropdown-panel">
+              <div className="region-main-list">
+                {Object.keys(REGION_GROUPS).map((group) => (
+                  <button
+                    key={group}
+                    className={
+                      openRegionGroup === group
+                        ? 'region-main-button active'
+                        : 'region-main-button'
+                    }
+                    onClick={() => handleRegionGroupClick(group)}
+                  >
+                    <span>{group}</span>
+                    <strong>{openRegionGroup === group ? '▲' : '▼'}</strong>
+                  </button>
+                ))}
+              </div>
+
+              {openRegionGroup && (
+                <div className="region-sub-list">
+                  <p className="region-sub-title">{openRegionGroup}</p>
+
+                  <div className="region-detail-list">
+                    {REGION_GROUPS[openRegionGroup].map((detail) => (
+                      <button
+                        key={`${openRegionGroup}-${detail}`}
+                        className={
+                          requestForm.regionGroup === openRegionGroup &&
+                          requestForm.regionDetail === detail
+                            ? 'region-detail-chip active'
+                            : 'region-detail-chip'
+                        }
+                        onClick={() => handleRegionDetailClick(openRegionGroup, detail)}
+                      >
+                        {detail}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </FormGroup>
+
+        <FormGroup label="요청사항">
           <textarea
             value={requestForm.message}
             onChange={(e) => onChange('message', e.target.value)}
-            placeholder="예: 평일 낮에 작은 전시가 있으면 좋겠어요."
+            placeholder="원하는 프로그램, 분위기, 대상, 필요한 이유 등을 자유롭게 적어주세요."
           />
         </FormGroup>
 
