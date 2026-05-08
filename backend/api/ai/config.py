@@ -4,12 +4,15 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+
 EMBED_MODEL = os.getenv("EMBED_MODEL", "text-embedding-3-small")
+
 SIM_THRESHOLD = float(os.getenv("SIM_THRESHOLD", "0.25"))
+
 MIN_CLUSTER_SIZE = int(os.getenv("MIN_CLUSTER_SIZE", "3"))
-DEMO_CSV_PATH = os.getenv("DEMO_CSV_PATH", "demo.csv")
-CACHE_FILE = os.getenv("CACHE_FILE", "embedding_cache.json")
+
+USE_OPENAI_EMBEDDING = os.getenv("USE_OPENAI_EMBEDDING", "true").lower() == "true"
 
 REGION_GROUPS = {
     "서울": [

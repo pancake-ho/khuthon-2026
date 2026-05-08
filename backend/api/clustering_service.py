@@ -3,9 +3,9 @@ from typing import Any, Dict, Optional
 import numpy as np
 import config
 from display import print_add_result
-from embedding_service import EmbeddingService
+from api.ai.embedding_service import EmbeddingService
 from models import AppState
-from similarity import cosine_similarity
+from api.ai.similarity import cosine_similarity
 
 class ClusteringService:
     """요청 추가, 기존 군집 배정, 새 군집 생성, centroid 갱신을 담당한다."""
