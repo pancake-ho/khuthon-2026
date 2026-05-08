@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useRef } from 'react'
 import './App.css'
 
 const ADMIN_PASSWORD = '0000'
@@ -9,38 +9,48 @@ const TIME_VALUE_MAP = {
   '평일 오전': 'WEEKDAY_MORNING',
   '평일 오후': 'WEEKDAY_AFTERNOON',
   '평일 저녁': 'WEEKDAY_EVENING',
-  '금요일 저녁': 'FRIDAY_EVENING',
-  '토요일 오전': 'SATURDAY_MORNING',
-  '토요일 오후': 'SATURDAY_AFTERNOON',
-  '일요일 오후': 'SUNDAY_AFTERNOON',
+  '금요일 저녁': 'WEEKDAY_EVENING',
+  '토요일 오전': 'WEEKEND_MORNING',
+  '토요일 오후': 'WEEKEND_AFTERNOON',
+  '일요일 오후': 'WEEKEND_AFTERNOON',
 }
 
 const BUDGET_VALUE_MAP = {
   '무료': 'FREE',
   '3만원 이내': 'UNDER_30000',
   '5만원 이내': 'UNDER_50000',
-  '10만원 이내': 'UNDER_100000',
-  '10만원 이상': 'OVER_100000',
+  '10만원 이내': 'ANY',
+  '10만원 이상': 'ANY',
+}
+
+const REGION_CENTER_MAP = {
+  '서울 종로구': { lat: 37.5735, lng: 126.9790 },
+  '서울 영등포구': { lat: 37.5264, lng: 126.8962 },
+  '경기 수원시': { lat: 37.2636, lng: 127.0286 },
+  '경기 성남시': { lat: 37.4200, lng: 127.1265 },
+  '인천 중구': { lat: 37.4738, lng: 126.6216 },
+}
+
+const getRegionCenter = (call) => {
+  if (!call?.place) {
+    return MAP_CENTER
+  }
+
+  return REGION_CENTER_MAP[call.place] || MAP_CENTER
 }
 
 const getCategoryFromMessage = (message) => {
   if (message.includes('전통') || message.includes('한복') || message.includes('국악')) {
-    return 'TRADITIONAL'
+    return 'TRADITION'
   }
-  if (message.includes('공예') || message.includes('한지') || message.includes('만들기')) {
-    return 'CRAFT'
-  }
-  if (message.includes('공연') || message.includes('연극')) {
+  if (message.includes('공연') || message.includes('연극') || message.includes('음악') || message.includes('밴드') || message.includes('인디')) {
     return 'PERFORMANCE'
   }
   if (message.includes('전시') || message.includes('작가') || message.includes('미술')) {
     return 'EXHIBITION'
   }
-  if (message.includes('음악') || message.includes('밴드') || message.includes('인디')) {
-    return 'MUSIC'
-  }
-  if (message.includes('체험') || message.includes('수업') || message.includes('클래스')) {
-    return 'CLASS'
+  if (message.includes('체험') || message.includes('수업') || message.includes('클래스') || message.includes('공예') || message.includes('한지') || message.includes('만들기')) {
+    return 'EXPERIENCE'
   }
   return 'ETC'
 }
@@ -273,30 +283,60 @@ const cultureCalls = [
 const creatorSpaces = [
   {
     id: 1,
+    region: '경기 수원시',
     icon: '📚',
     name: '○○도서관 문화강의실',
     type: '공공공간',
     capacity: '30명',
-    availableTime: '주말 낮',
-    goodFor: '전시 / 체험 / 강연',
+    availableTime: '평일 오전',
+    goodFor: '전시 / 체험 / 강연 / 소규모 공연',
+    lat: 37.2636,
+    lng: 127.0286,
+    description: '수원시 생활권에서 접근 가능한 공공 문화공간',
+    reason: '무료·저비용 프로그램 운영에 적합하고, 대중교통 접근성이 좋아 문화 접근성 개선 효과가 큽니다.',
   },
   {
     id: 2,
+    region: '경기 수원시',
     icon: '🧑‍🎤',
     name: '○○청년센터 라운지',
     type: '청년공간',
     capacity: '50명',
     availableTime: '평일 저녁',
     goodFor: '공연 / 영화 / 네트워킹',
+    lat: 37.2687,
+    lng: 127.0307,
+    description: '청년층 공연과 커뮤니티 활동에 적합한 공간',
+    reason: '인디 공연·소규모 창작자 프로그램을 열기 좋아 비주류 문화 노출에 적합합니다.',
   },
   {
     id: 3,
+    region: '경기 수원시',
     icon: '🏢',
     name: '○○주민센터 다목적실',
     type: '생활문화공간',
     capacity: '40명',
     availableTime: '평일 낮',
     goodFor: '연극 / 체험 / 고령층 프로그램',
+    lat: 37.2751,
+    lng: 127.0196,
+    description: '동네 주민이 가까이 접근할 수 있는 생활권 공공공간',
+    reason: '고령층·가족 단위 사용자가 이동 부담 없이 참여할 수 있어 지역 문화 접근성 개선에 적합합니다.',
+  },
+
+  {
+    id: 4,
+    region: '서울 종로구',
+    icon: '📚',
+    name: '종로 생활문화센터',
+    type: '생활문화공간',
+    capacity: '35명',
+    availableTime: '평일 오전',
+    goodFor: '공연 / 강연 / 전통문화 체험',
+    lat: 37.5735,
+    lng: 126.9790,
+    description: '종로구 생활권에서 접근 가능한 공공 문화공간',
+    reason: '종로구 요청과 같은 생활권에 있어 이동 부담을 줄일 수 있습니다.',
   },
 ]
 
@@ -371,38 +411,14 @@ const MAP_CENTER = {
   lng: 126.9783882,
 }
 
-const mapPlaces = [
-  {
-    id: 1,
-    name: '○○도서관 문화강의실',
-    type: '공공공간',
-    lat: 37.5666103,
-    lng: 126.9783882,
-    description: '전시 / 체험 / 강연에 적합한 생활권 문화공간',
-  },
-  {
-    id: 2,
-    name: '○○청년센터 라운지',
-    type: '청년공간',
-    lat: 37.570377,
-    lng: 126.9816417,
-    description: '평일 저녁 공연 / 영화 / 네트워킹 가능',
-  },
-  {
-    id: 3,
-    name: '○○주민센터 다목적실',
-    type: '생활문화공간',
-    lat: 37.5637584,
-    lng: 126.9975517,
-    description: '연극 / 체험 / 고령층 프로그램에 적합',
-  },
-]
 
 function App() {
   const [page, setPage] = useState('home')
   const [selectedCall, setSelectedCall] = useState(cultureCalls[0])
   const [serverCalls, setServerCalls] = useState([])
   const [isLoadingCalls, setIsLoadingCalls] = useState(false)
+  const [serverPrograms, setServerPrograms] = useState([])
+  const [isSubmittingRequest, setIsSubmittingRequest] = useState(false)
   const [isHelpOpen, setIsHelpOpen] = useState(false)
   const [isFeatureOpen, setIsFeatureOpen] = useState(false)
   const [isAdminLoginOpen, setIsAdminLoginOpen] = useState(false)
@@ -436,6 +452,85 @@ function App() {
       : [],
   })
 
+  const getIconByCategory = (category) => {
+    if (category === 'TRADITION') return '🏮'
+    if (category === 'PERFORMANCE') return '🎸'
+    if (category === 'EXHIBITION') return '🖼️'
+    if (category === 'EXPERIENCE') return '🎨'
+    return '📮'
+  }
+
+  const getBudgetLabel = (budget) => {
+    if (budget === 'FREE') return '무료'
+    if (budget === 'UNDER_10000') return '1만원 이하'
+    if (budget === 'UNDER_30000') return '3만원 이하'
+    if (budget === 'UNDER_50000') return '5만원 이하'
+    return '상관없음'
+  }
+
+  const convertProgramToMatchedProgram = (program) => {
+    const cluster = program.cluster || {}
+
+    return {
+      id: program.id,
+      icon: getIconByCategory(cluster.main_category),
+      title: program.title,
+      creator: program.creator_name || '지역 창작자 매칭 예정',
+      creatorInfo: [
+        program.is_local_creator ? '지역 창작자' : null,
+        program.is_small_creator ? '소규모 창작자' : null,
+        program.is_traditional ? '전통문화 연계' : null,
+      ].filter(Boolean).join(' / ') || '창작자 정보 준비 중',
+      space: program.place_name || '공공공간 매칭 예정',
+      spaceInfo: program.address || cluster.region_label || '공간 정보 준비 중',
+      status: '신청자 모집 중',
+      original: program,
+    }
+  }
+
+  const convertProgramToMyProgram = (program) => {
+    const cluster = program.cluster || {}
+
+    return {
+      id: program.id,
+      icon: getIconByCategory(cluster.main_category),
+      title: program.title,
+      date: cluster.preferred_time || '일정 협의 중',
+      place: program.place_name || program.address || '공공공간 매칭 예정',
+      target: cluster.target_age || '누구나',
+      fee: getBudgetLabel(cluster.budget_range),
+      status: '신청 가능',
+      original: program,
+    }
+  }
+
+  const createProgramFromCluster = async (clusterId) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/clusters/${clusterId}/create-program/`, {
+        method: 'POST',
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        console.error(data)
+        alert(data.error || '아직 프로그램으로 생성할 수 없습니다.')
+        return
+      }
+
+      alert('문화 프로그램이 생성되었습니다!')
+
+      await fetchClusters()
+      await fetchPrograms()
+
+      setPage('matching')
+    } catch (error) {
+      console.error(error)
+      alert('프로그램 생성 중 오류가 발생했습니다.')
+    }
+  }
+
+
   const fetchClusters = async () => {
     try {
       setIsLoadingCalls(true)
@@ -461,8 +556,24 @@ function App() {
     }
   }
 
+  const fetchPrograms = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/programs/`)
+
+      if (!response.ok) {
+        throw new Error('프로그램 목록을 불러오지 못했습니다.')
+      }
+
+      const data = await response.json()
+      setServerPrograms(data)
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
   useEffect(() => {
     fetchClusters()
+    fetchPrograms()
   }, [])
 
   const goHome = () => {
@@ -499,43 +610,47 @@ function App() {
   }
 
   const submitRequest = async () => {
-  if (!requestForm.regionGroup || !requestForm.regionDetail) {
-    alert('지역을 선택해주세요.')
+  if (isSubmittingRequest) {
     return
   }
 
-  if (!requestForm.time) {
-    alert('시간대를 선택해주세요.')
-    return
-  }
-
-  if (!requestForm.budget) {
-    alert('예산을 선택해주세요.')
-    return
-  }
-
-  if (!requestForm.message.trim()) {
-    alert('요청 내용을 입력해주세요.')
-    return
-  }
-
-  const payload = {
-    requester_nickname: '익명',
-    title:
-      requestForm.message.trim().length > 30
-        ? `${requestForm.message.trim().slice(0, 30)}...`
-        : requestForm.message.trim(),
-    content: requestForm.message.trim(),
-    sido: requestForm.regionGroup,
-    sigungu: requestForm.regionDetail,
-    category: getCategoryFromMessage(requestForm.message),
-    target_age: 'ALL',
-    preferred_time: TIME_VALUE_MAP[requestForm.time] || 'ANYTIME',
-    budget_range: BUDGET_VALUE_MAP[requestForm.budget] || 'UNDER_30000',
-    mobility_limit: '',
-  }
+  setIsSubmittingRequest(true)
 
   try {
+    if (!requestForm.regionGroup || !requestForm.regionDetail) {
+      alert('지역을 선택해주세요.')
+      return
+    }
+
+    if (!requestForm.time) {
+      alert('시간대를 선택해주세요.')
+      return
+    }
+
+    if (!requestForm.budget) {
+      alert('예산을 선택해주세요.')
+      return
+    }
+
+    if (!requestForm.message.trim()) {
+      alert('요청 내용을 입력해주세요.')
+      return
+    }
+
+    const payload = {
+      title:
+        requestForm.message.trim().length > 30
+          ? `${requestForm.message.trim().slice(0, 30)}...`
+          : requestForm.message.trim(),
+      content: requestForm.message.trim(),
+      sido: requestForm.regionGroup,
+      sigungu: requestForm.regionDetail,
+      main_category: getCategoryFromMessage(requestForm.message),
+      target_age: 'ALL',
+      preferred_time: TIME_VALUE_MAP[requestForm.time] || 'WEEKDAY_AFTERNOON',
+      budget_range: BUDGET_VALUE_MAP[requestForm.budget] || 'UNDER_30000',
+    }
+
     const response = await fetch(`${API_BASE_URL}/requests/`, {
       method: 'POST',
       headers: {
@@ -564,10 +679,13 @@ function App() {
     })
 
     await fetchClusters()
+    await fetchPrograms()
     setPage('list')
   } catch (error) {
     console.error(error)
     alert('서버 연결에 실패했습니다. 백엔드 서버가 켜져 있는지 확인해주세요.')
+  } finally {
+    setIsSubmittingRequest(false)
   }
 }
 
@@ -620,6 +738,7 @@ function App() {
           onClearRegion={clearRegion}
           onSubmit={submitRequest}
           onBack={goHome}
+          isSubmitting={isSubmittingRequest}
         />
       )}
 
@@ -639,15 +758,16 @@ function App() {
 
       {page === 'creator' && (
         <CreatorModePage
-          calls={cultureCalls}
+          calls={serverCalls}
           spaces={creatorSpaces}
           onBack={goHome}
+          onCreateProgram={createProgramFromCluster}
         />
       )}
 
       {page === 'matching' && (
         <MatchingPage
-          programs={matchedPrograms}
+          programs={serverPrograms.map(convertProgramToMatchedProgram)}
           onMyProgramClick={() => setPage('my')}
           onBack={goHome}
         />
@@ -655,7 +775,7 @@ function App() {
 
       {page === 'my' && (
         <MyProgramPage
-          programs={myPrograms}
+          programs={serverPrograms.map(convertProgramToMyProgram)}
           onBack={goHome}
         />
       )}
@@ -859,6 +979,7 @@ function RequestPage({
   onClearRegion,
   onSubmit,
   onBack,
+  isSubmitting,
 }) {
   const [isTimeOpen, setIsTimeOpen] = useState(false)
   const [isBudgetOpen, setIsBudgetOpen] = useState(false)
@@ -1025,8 +1146,13 @@ function RequestPage({
           />
         </FormGroup>
 
-        <button className="primary-button full-button" onClick={onSubmit}>
-          등록
+        <button
+          type="button"
+          className="primary-button full-button"
+          onClick={onSubmit}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? '등록 중...' : '등록'}
         </button>
       </section>
     </PageLayout>
@@ -1044,7 +1170,7 @@ function CalltureListPage({
   isLoading,
 }) {
   const [isDetailOpen, setIsDetailOpen] = useState(false)
-
+  
   if (isLoading) {
   return (
     <PageLayout onBack={onBack}>
@@ -1176,145 +1302,155 @@ if (calls.length === 0) {
   )
 }
 
-function NaverMap({ places = [] }) {
-  const mapElementId = 'naver-map'
-  const [status, setStatus] = useState('loading')
+function NaverMap({ places, selectedSpace, center }) {
+  const mapRef = useRef(null)
+  const mapInstanceRef = useRef(null)
+  const markersRef = useRef([])
+  const infoWindowsRef = useRef([])
+  const [mapMessage, setMapMessage] = useState('지도 로딩 중...')
 
   useEffect(() => {
-    const clientId = import.meta.env.VITE_NAVER_MAP_CLIENT_ID
-
-    if (!clientId) {
-      console.error('VITE_NAVER_MAP_CLIENT_ID가 설정되지 않았습니다.')
-      setStatus('missing-key')
+    if (!window.naver || !window.naver.maps) {
+      setMapMessage('네이버 지도 API를 불러오지 못했습니다. API 키와 접속 주소를 확인해주세요.')
       return
     }
 
-    const initializeMap = () => {
-      if (!window.naver || !window.naver.maps) {
-        console.error('Naver Maps 객체를 찾을 수 없습니다.')
-        setStatus('load-error')
-        return
-      }
+    if (!mapRef.current) {
+      return
+    }
 
-      const mapContainer = document.getElementById(mapElementId)
+    const mapCenter = new window.naver.maps.LatLng(center.lat, center.lng)
 
-      if (!mapContainer) {
-        console.error('지도 컨테이너를 찾을 수 없습니다.')
-        setStatus('container-error')
-        return
-      }
-
-      const map = new window.naver.maps.Map(mapContainer, {
-        center: new window.naver.maps.LatLng(MAP_CENTER.lat, MAP_CENTER.lng),
-        zoom: 13,
-        minZoom: 7,
+    if (!mapInstanceRef.current) {
+      mapInstanceRef.current = new window.naver.maps.Map(mapRef.current, {
+        center: mapCenter,
+        zoom: 14,
         zoomControl: true,
         zoomControlOptions: {
           position: window.naver.maps.Position.TOP_RIGHT,
         },
       })
-
-      places.forEach((place) => {
-        const marker = new window.naver.maps.Marker({
-          position: new window.naver.maps.LatLng(place.lat, place.lng),
-          map,
-          title: place.name,
-        })
-
-        const infoWindow = new window.naver.maps.InfoWindow({
-          content: `
-            <div style="padding:12px; min-width:190px;">
-              <strong style="display:block; margin-bottom:6px;">
-                ${place.name}
-              </strong>
-              <span style="display:block; color:#ff6b6b; font-weight:700; margin-bottom:6px;">
-                ${place.type}
-              </span>
-              <p style="margin:0; color:#555; font-size:13px; line-height:1.5;">
-                ${place.description}
-              </p>
-            </div>
-          `,
-        })
-
-        window.naver.maps.Event.addListener(marker, 'click', () => {
-          if (infoWindow.getMap()) {
-            infoWindow.close()
-          } else {
-            infoWindow.open(map, marker)
-          }
-        })
-      })
-
-      setStatus('ready')
+    } else {
+      mapInstanceRef.current.setCenter(mapCenter)
     }
 
-    if (window.naver && window.naver.maps) {
-      initializeMap()
+    setMapMessage('')
+  }, [center])
+
+  useEffect(() => {
+    if (!window.naver || !window.naver.maps || !mapInstanceRef.current) {
       return
     }
 
-    const existingScript = document.querySelector('script[data-naver-map-script="true"]')
+    markersRef.current.forEach((marker) => marker.setMap(null))
+    infoWindowsRef.current.forEach((infoWindow) => infoWindow.close())
 
-    if (existingScript) {
-      existingScript.addEventListener('load', initializeMap)
-      existingScript.addEventListener('error', () => setStatus('load-error'))
+    markersRef.current = []
+    infoWindowsRef.current = []
 
-      return () => {
-        existingScript.removeEventListener('load', initializeMap)
-      }
-    }
+    places.forEach((place) => {
+      const marker = new window.naver.maps.Marker({
+        position: new window.naver.maps.LatLng(place.lat, place.lng),
+        map: mapInstanceRef.current,
+        title: place.name,
+      })
 
-    const script = document.createElement('script')
-    script.setAttribute('data-naver-map-script', 'true')
-    script.src = `https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=${clientId}`
-    script.async = true
+      const infoWindow = new window.naver.maps.InfoWindow({
+        content: `
+          <div style="padding:12px;min-width:180px;">
+            <strong>${place.name}</strong>
+            <p style="margin:6px 0 0;color:#ff6b6b;font-weight:700;">${place.type}</p>
+            <p style="margin:6px 0 0;color:#555;">${place.description || place.goodFor}</p>
+            <p style="margin:6px 0 0;color:#8a5b00;font-weight:700;">${place.reason || ''}</p>
+          </div>
+        `,
+      })
 
-    script.onload = initializeMap
-    script.onerror = () => {
-      console.error('네이버 지도 스크립트 로드 실패')
-      setStatus('load-error')
-    }
+      window.naver.maps.Event.addListener(marker, 'click', () => {
+        infoWindow.open(mapInstanceRef.current, marker)
+      })
 
-    document.head.appendChild(script)
+      markersRef.current.push(marker)
+      infoWindowsRef.current.push(infoWindow)
+    })
   }, [places])
+
+  useEffect(() => {
+    if (!window.naver || !window.naver.maps || !mapInstanceRef.current || !selectedSpace) {
+      return
+    }
+
+    const target = new window.naver.maps.LatLng(selectedSpace.lat, selectedSpace.lng)
+
+    mapInstanceRef.current.panTo(target)
+
+    const selectedIndex = places.findIndex((place) => place.id === selectedSpace.id)
+    const marker = markersRef.current[selectedIndex]
+    const infoWindow = infoWindowsRef.current[selectedIndex]
+
+    if (marker && infoWindow) {
+      infoWindowsRef.current.forEach((item) => item.close())
+      infoWindow.open(mapInstanceRef.current, marker)
+    }
+  }, [selectedSpace, places])
 
   return (
     <div className="naver-map-wrapper">
-      <div id={mapElementId} className="naver-map" />
-
-      {status === 'loading' && (
+      <div ref={mapRef} className="naver-map" />
+      {mapMessage && (
         <div className="map-status-message">
-          지도를 불러오는 중입니다.
-        </div>
-      )}
-
-      {status === 'missing-key' && (
-        <div className="map-status-message error-message">
-          VITE_NAVER_MAP_CLIENT_ID가 설정되지 않았습니다.
-        </div>
-      )}
-
-      {status === 'load-error' && (
-        <div className="map-status-message error-message">
-          네이버 지도 API를 불러오지 못했습니다. Client ID와 Web 서비스 URL을 확인해주세요.
-        </div>
-      )}
-
-      {status === 'container-error' && (
-        <div className="map-status-message error-message">
-          지도 컨테이너를 찾지 못했습니다.
+          {mapMessage}
         </div>
       )}
     </div>
   )
 }
 
-function CreatorModePage({ calls, spaces, onBack }) {
-  const readyCalls = calls.filter((call) => call.current / call.goal >= 0.7)
-  const [selectedCall, setSelectedCall] = useState(readyCalls[0])
-  const [selectedSpace, setSelectedSpace] = useState(spaces[0])
+function CreatorModePage({ calls, spaces, onBack, onCreateProgram }) {
+  const readyCalls = useMemo(
+    () => calls.filter((call) => call.current >= call.goal),
+    [calls]
+  )
+
+  const [selectedCall, setSelectedCall] = useState(null)
+  const [selectedSpace, setSelectedSpace] = useState(spaces[0] || null)
   const [isDetailOpen, setIsDetailOpen] = useState(false)
+
+  const availableSpaces = useMemo(() => {
+    const matched = spaces.filter((space) => space.region === selectedCall?.place)
+    return matched.length > 0 ? matched : spaces
+  }, [spaces, selectedCall])
+
+  useEffect(() => {
+      if (availableSpaces.length === 0) {
+        setSelectedSpace(null)
+        return
+      }
+
+      const stillAvailable = availableSpaces.some((space) => space.id === selectedSpace?.id)
+
+      if (!selectedSpace || !stillAvailable) {
+        setSelectedSpace(availableSpaces[0])
+      }
+  }, [availableSpaces, selectedSpace])
+
+  useEffect(() => {
+    if (!selectedCall && readyCalls.length > 0) {
+      setSelectedCall(readyCalls[0])
+    }
+  }, [readyCalls, selectedCall])
+
+  if (readyCalls.length === 0 || !selectedCall) {
+    return (
+      <PageLayout onBack={onBack}>
+        <section className="section-header">
+          <p className="eyebrow">Callture</p>
+          <h1>관리자</h1>
+          <p>아직 매칭 가능한 요청이 없습니다.</p>
+        </section>
+      </PageLayout>
+    )
+  }
 
   return (
     <PageLayout onBack={onBack}>
@@ -1330,7 +1466,7 @@ function CreatorModePage({ calls, spaces, onBack }) {
             {readyCalls.map((call) => (
               <button
                 key={call.id}
-                className={selectedCall.id === call.id ? 'mini-card active' : 'mini-card'}
+                className={selectedCall?.id === call.id ? 'mini-card active' : 'mini-card'}
                 onClick={() => {
                   setSelectedCall(call)
                   setIsDetailOpen(false)
@@ -1345,16 +1481,20 @@ function CreatorModePage({ calls, spaces, onBack }) {
         </section>
 
         <div className="map-panel">
-          <NaverMap places={mapPlaces} />
+          <NaverMap
+            places={availableSpaces}
+            selectedSpace={selectedSpace}
+            center={getRegionCenter(selectedCall)}
+          />
         </div>
 
         <section className="creator-panel">
           <h2>공간</h2>
           <div className="mini-list">
-            {spaces.map((space) => (
+            {availableSpaces.map((space) => (
               <button
                 key={space.id}
-                className={selectedSpace.id === space.id ? 'mini-card active' : 'mini-card'}
+                className={selectedSpace?.id === space.id ? 'mini-card active' : 'mini-card'}
                 onClick={() => setSelectedSpace(space)}
               >
                 <span className="mini-emoji">{space.icon}</span>
@@ -1399,9 +1539,21 @@ function CreatorModePage({ calls, spaces, onBack }) {
 
         <button
           className="primary-button full-button"
-          onClick={() => alert('공간 매칭이 저장되었습니다!')}
+          onClick={() => {
+            if (!selectedCall) {
+              alert('매칭할 요청을 선택해주세요.')
+              return
+            }
+
+            if (selectedCall.current < selectedCall.goal) {
+              alert('아직 요청 수가 부족합니다.')
+              return
+            }
+
+            onCreateProgram(selectedCall.id)
+          }}
         >
-          매칭
+          {selectedCall && selectedCall.current >= selectedCall.goal ? '매칭' : '요청 모집 중'}
         </button>
       </section>
     </PageLayout>

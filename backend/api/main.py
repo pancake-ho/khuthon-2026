@@ -4,7 +4,7 @@ from cli import run_cli
 from clustering_service import ClusteringService
 from csv_loader import load_requests_from_csv
 from display import print_cluster_summary, print_ready_candidates
-from embedding_service import EmbeddingService
+from api.ai.embedding_service import EmbeddingService
 from models import AppState
 
 def print_startup_info() -> None:
