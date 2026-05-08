@@ -61,10 +61,7 @@ INSTALLED_APPS = [
 
     # Local apps
     # 앱을 만든 뒤 아래에 추가하면 됩니다.
-    "apps.users",
-    # "apps.requests",
-    # "apps.creators",
-    # "apps.programs",
+    "apps.places",
 ]
 
 MIDDLEWARE = [
@@ -203,6 +200,9 @@ FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
 
 CORS_ALLOWED_ORIGINS = [
     FRONTEND_URL,
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:5173",
 ]
 
 # 개발 중 임시 허용이 필요하면 아래 값을 True로 바꿀 수 있습니다.
