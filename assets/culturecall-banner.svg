@@ -1,52 +1,44 @@
-<svg width="1200" height="360" viewBox="0 0 1200 360" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg width="1200" height="420" viewBox="0 0 1200 420" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="360" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#141E30"/>
-      <stop offset="1" stop-color="#243B55"/>
+    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="420" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFF7E8"/>
+      <stop offset="1" stop-color="#FFECEF"/>
     </linearGradient>
-    <linearGradient id="accent" x1="180" y1="70" x2="980" y2="300" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#FFCA7A"/>
-      <stop offset="0.55" stop-color="#8BE0C6"/>
-      <stop offset="1" stop-color="#A9B8FF"/>
+    <linearGradient id="main" x1="174" y1="63" x2="900" y2="320" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FF7A7A"/>
+      <stop offset="0.55" stop-color="#FFB26B"/>
+      <stop offset="1" stop-color="#8BA7FF"/>
     </linearGradient>
     <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#000000" flood-opacity="0.28"/>
+      <feDropShadow dx="0" dy="18" stdDeviation="22" flood-color="#9B4D55" flood-opacity="0.18"/>
     </filter>
   </defs>
-
-  <rect width="1200" height="360" rx="34" fill="url(#bg)"/>
-  <circle cx="1080" cy="70" r="160" fill="#FFFFFF" opacity="0.05"/>
-  <circle cx="110" cy="315" r="150" fill="#FFFFFF" opacity="0.045"/>
-
-  <g opacity="0.95" filter="url(#shadow)">
-    <rect x="84" y="78" width="1032" height="204" rx="30" fill="#FFFFFF" opacity="0.08"/>
-    <rect x="84.5" y="78.5" width="1031" height="203" rx="29.5" stroke="#FFFFFF" opacity="0.18"/>
+  <rect width="1200" height="420" rx="34" fill="url(#bg)"/>
+  <circle cx="1050" cy="80" r="150" fill="#D9F247" opacity="0.85"/>
+  <circle cx="130" cy="330" r="170" fill="#D9F247" opacity="0.65"/>
+  <path d="M928 282C970 234 1032 232 1080 282" stroke="#173B96" stroke-width="8" stroke-linecap="round" stroke-dasharray="22 18" opacity="0.9"/>
+  <g filter="url(#shadow)">
+    <rect x="80" y="76" width="1040" height="268" rx="34" fill="#FFFFFF" opacity="0.84"/>
+    <rect x="81" y="77" width="1038" height="266" rx="33" stroke="#FFFFFF" stroke-width="2"/>
   </g>
-
-  <g transform="translate(135 114)">
-    <circle cx="50" cy="60" r="48" fill="url(#accent)"/>
-    <path d="M33 54C33 43.5 41.5 35 52 35H66C76.5 35 85 43.5 85 54V83C85 89.6 79.6 95 73 95H52C41.5 95 33 86.5 33 76V54Z" fill="#142033" opacity="0.92"/>
-    <path d="M18 71C18 64.4 23.4 59 30 59H45C51.6 59 57 64.4 57 71V79C57 85.6 51.6 91 45 91H35L23 101V91H30C23.4 91 18 85.6 18 79V71Z" fill="#FFFFFF" opacity="0.96"/>
-    <circle cx="34" cy="75" r="3" fill="#243B55"/>
-    <circle cx="45" cy="75" r="3" fill="#243B55"/>
+  <g transform="translate(122 116)">
+    <rect x="0" y="0" width="138" height="138" rx="36" fill="#FFF0F0"/>
+    <path d="M74 24C98 24 114 42 114 66C114 93 93 114 70 114C44 114 24 94 24 69C24 43 43 24 74 24Z" fill="url(#main)" opacity="0.95"/>
+    <path d="M52 67C52 55 61 46 73 46C85 46 94 55 94 67C94 79 85 88 73 88H60L47 101V86C40 83 36 76 36 68C36 58 43 50 52 48" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="65" cy="68" r="4" fill="#FFFFFF"/>
+    <circle cx="80" cy="68" r="4" fill="#FFFFFF"/>
   </g>
-
-  <text x="265" y="150" fill="#FFFFFF" font-family="Arial, Helvetica, sans-serif" font-size="54" font-weight="800">문화콜 Culture Call</text>
-  <text x="268" y="194" fill="#DDE8F2" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="500">사용자의 문화 요청을 모아 지역 창작자와 공공공간을 연결합니다</text>
-
-  <g transform="translate(268 222)">
-    <rect x="0" y="0" width="178" height="38" rx="19" fill="#FFFFFF" opacity="0.13"/>
-    <text x="22" y="26" fill="#FFFFFF" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="700">문화 접근성</text>
-    <rect x="194" y="0" width="178" height="38" rx="19" fill="#FFFFFF" opacity="0.13"/>
-    <text x="216" y="26" fill="#FFFFFF" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="700">공정한 발견</text>
-    <rect x="388" y="0" width="190" height="38" rx="19" fill="#FFFFFF" opacity="0.13"/>
-    <text x="410" y="26" fill="#FFFFFF" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="700">지역문화 순환</text>
-    <rect x="594" y="0" width="190" height="38" rx="19" fill="#FFFFFF" opacity="0.13"/>
-    <text x="616" y="26" fill="#FFFFFF" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="700">전통문화 지속성</text>
+  <text x="300" y="155" fill="#1D1D1F" font-family="Arial, Helvetica, sans-serif" font-size="62" font-weight="900">Callture</text>
+  <text x="303" y="204" fill="#FF7272" font-family="Arial, Helvetica, sans-serif" font-size="31" font-weight="800">요청이 모이면, 문화가 열립니다</text>
+  <text x="304" y="245" fill="#31313A" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="500">개인의 문화 요청을 지역 수요 데이터로 모아 창작자와 공공공간에 연결하는 문화 중개 서비스</text>
+  <g transform="translate(304 275)">
+    <rect x="0" y="0" width="140" height="40" rx="20" fill="#173B96" opacity="0.95"/>
+    <text x="22" y="26" fill="#FFFFFF" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="800">수요 기반</text>
+    <rect x="156" y="0" width="158" height="40" rx="20" fill="#173B96" opacity="0.12"/>
+    <text x="180" y="26" fill="#173B96" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="800">공정 노출</text>
+    <rect x="330" y="0" width="170" height="40" rx="20" fill="#173B96" opacity="0.12"/>
+    <text x="354" y="26" fill="#173B96" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="800">지역 연결</text>
+    <rect x="516" y="0" width="190" height="40" rx="20" fill="#173B96" opacity="0.12"/>
+    <text x="540" y="26" fill="#173B96" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="800">전통문화 지속성</text>
   </g>
-
-  <path d="M862 102C918 115 938 164 975 176C1008 187 1044 168 1082 137" stroke="url(#accent)" stroke-width="8" stroke-linecap="round" opacity="0.85"/>
-  <circle cx="862" cy="102" r="10" fill="#FFCA7A"/>
-  <circle cx="975" cy="176" r="10" fill="#8BE0C6"/>
-  <circle cx="1082" cy="137" r="10" fill="#A9B8FF"/>
 </svg>
